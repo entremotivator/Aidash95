@@ -1,0 +1,452 @@
+/* Business Management Suite - Unified Theme */
+
+/* Color Variables */
+:root {
+  --primary-color: #2e86ab;
+  --secondary-color: #a23b72;
+  --accent-color: #f18f01;
+  --success-color: #28a745;
+  --warning-color: #ffc107;
+  --error-color: #dc3545;
+  --info-color: #17a2b8;
+  --light-bg: #f8f9fa;
+  --dark-bg: #2d3748;
+  --text-primary: #2c3e50;
+  --text-secondary: #6c757d;
+  --border-color: #e9ecef;
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Global Styles */
+.stApp {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+/* Login Container */
+.login-container {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  padding: 2rem;
+  border-radius: 15px;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow);
+  color: white;
+}
+
+/* User Header in Sidebar */
+.user-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--info-color) 100%);
+  color: white;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+/* Metric Cards */
+.metric-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  border-left: 4px solid var(--primary-color);
+  margin-bottom: 1rem;
+  transition: transform 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Status Indicators */
+.status-success {
+  color: var(--success-color);
+  font-weight: bold;
+}
+
+.status-warning {
+  color: var(--warning-color);
+  font-weight: bold;
+}
+
+.status-error {
+  color: var(--error-color);
+  font-weight: bold;
+}
+
+.status-info {
+  color: var(--info-color);
+  font-weight: bold;
+}
+
+/* Button Enhancements */
+.stButton > button {
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+}
+
+.stButton > button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+}
+
+/* Primary Button */
+.stButton > button[kind="primary"] {
+  background: linear-gradient(135deg, var(--accent-color) 0%, #e67e00 100%);
+}
+
+.stButton > button[kind="primary"]:hover {
+  background: linear-gradient(135deg, #e67e00 0%, var(--accent-color) 100%);
+}
+
+/* Form Styling */
+.stForm {
+  background: var(--light-bg);
+  padding: 2rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow);
+}
+
+/* Data Editor Styling */
+.stDataFrame {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+}
+
+/* Sidebar Enhancements */
+.css-1d391kg {
+  background: linear-gradient(180deg, var(--light-bg) 0%, #e9ecef 100%);
+}
+
+/* Chart Container */
+.plotly-chart {
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  background: white;
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+}
+
+/* Alert Styling */
+.stAlert {
+  border-radius: 8px;
+  border: none;
+  box-shadow: var(--shadow);
+}
+
+/* Success Alert */
+.stAlert[data-baseweb="notification"][kind="success"] {
+  background: linear-gradient(135deg, var(--success-color) 0%, #20c997 100%);
+  color: white;
+}
+
+/* Error Alert */
+.stAlert[data-baseweb="notification"][kind="error"] {
+  background: linear-gradient(135deg, var(--error-color) 0%, #e74c3c 100%);
+  color: white;
+}
+
+/* Warning Alert */
+.stAlert[data-baseweb="notification"][kind="warning"] {
+  background: linear-gradient(135deg, var(--warning-color) 0%, #f39c12 100%);
+  color: #856404;
+}
+
+/* Info Alert */
+.stAlert[data-baseweb="notification"][kind="info"] {
+  background: linear-gradient(135deg, var(--info-color) 0%, #3498db 100%);
+  color: white;
+}
+
+/* Tab Styling */
+.stTabs [data-baseweb="tab-list"] {
+  gap: 8px;
+  background: var(--light-bg);
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+.stTabs [data-baseweb="tab"] {
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 600;
+  background: white;
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+.stTabs [data-baseweb="tab"][aria-selected="true"] {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+}
+
+/* Expander Styling */
+.streamlit-expanderHeader {
+  background: var(--light-bg);
+  border-radius: 8px;
+  font-weight: 600;
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.streamlit-expanderHeader:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+/* Loading Spinner */
+.stSpinner {
+  text-align: center;
+  padding: 2rem;
+}
+
+/* Custom Message Boxes */
+.success-message {
+  background: linear-gradient(135deg, var(--success-color) 0%, #20c997 100%);
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  box-shadow: var(--shadow);
+}
+
+.error-message {
+  background: linear-gradient(135deg, var(--error-color) 0%, #e74c3c 100%);
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  box-shadow: var(--shadow);
+}
+
+.warning-message {
+  background: linear-gradient(135deg, var(--warning-color) 0%, #f39c12 100%);
+  color: #856404;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  box-shadow: var(--shadow);
+}
+
+.info-message {
+  background: linear-gradient(135deg, var(--info-color) 0%, #3498db 100%);
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  box-shadow: var(--shadow);
+}
+
+/* Chat Container */
+.chat-container {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+}
+
+.user-message {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  padding: 10px;
+  border-radius: 10px;
+  margin: 5px 0;
+  border-left: 4px solid var(--primary-color);
+}
+
+.assistant-message {
+  background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%);
+  padding: 10px;
+  border-radius: 10px;
+  margin: 5px 0;
+  border-left: 4px solid var(--success-color);
+}
+
+/* Drive Status */
+.drive-status {
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  padding: 10px;
+  border-radius: 5px;
+  border-left: 4px solid var(--success-color);
+  box-shadow: var(--shadow);
+}
+
+/* Navigation Menu */
+.nav-button {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.nav-button:hover {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  transform: translateX(5px);
+}
+
+.nav-button.active {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .login-container {
+    padding: 1rem;
+    margin: 0.5rem;
+  }
+
+  .metric-card {
+    padding: 1rem;
+  }
+
+  .user-header {
+    padding: 0.75rem;
+  }
+
+  .chat-container {
+    padding: 15px;
+  }
+}
+
+/* Animation Classes */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --light-bg: var(--dark-bg);
+    --text-primary: #ffffff;
+    --text-secondary: #a0aec0;
+    --border-color: #4a5568;
+  }
+
+  .metric-card {
+    background: var(--dark-bg);
+    color: white;
+  }
+
+  .stForm {
+    background: var(--dark-bg);
+    border-color: var(--border-color);
+    color: white;
+  }
+
+  .plotly-chart {
+    background: var(--dark-bg);
+  }
+
+  .chat-container {
+    background: var(--dark-bg);
+    color: white;
+  }
+}
+
+/* Input Field Styling */
+.stTextInput > div > div > input {
+  border-radius: 8px;
+  border: 2px solid var(--border-color);
+  transition: border-color 0.2s ease;
+}
+
+.stTextInput > div > div > input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(46, 134, 171, 0.2);
+}
+
+/* Select Box Styling */
+.stSelectbox > div > div > div {
+  border-radius: 8px;
+  border: 2px solid var(--border-color);
+}
+
+/* File Uploader Styling */
+.stFileUploader > div {
+  border-radius: 8px;
+  border: 2px dashed var(--primary-color);
+  background: rgba(46, 134, 171, 0.05);
+  transition: all 0.2s ease;
+}
+
+.stFileUploader > div:hover {
+  border-color: var(--secondary-color);
+  background: rgba(162, 59, 114, 0.05);
+}
+
+/* Progress Bar */
+.stProgress > div > div > div {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+}
+
+/* Sidebar Specific */
+.css-1lcbmhc {
+  background: linear-gradient(180deg, var(--light-bg) 0%, #e9ecef 100%);
+}
+
+/* Main Content Area */
+.main .block-container {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--light-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+}
