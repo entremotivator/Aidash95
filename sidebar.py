@@ -82,7 +82,7 @@ def show_sidebar():
                 key=f"nav_{page['name']}"
             ):
                 st.session_state.current_page = page['name']
-                st.rerun()
+                st.experimental_rerun()
         
         st.divider()
         
@@ -132,7 +132,7 @@ def show_sidebar():
                     if key in st.session_state:
                         st.session_state[key] = {}
                 st.success("App refreshed!")
-                st.rerun()
+                st.experimental_rerun()
         
         with col2:
             if st.button("🚪 Logout", use_container_width=True, help="Logout and return to login page"):
@@ -142,12 +142,12 @@ def show_sidebar():
                 if gsheets_creds:
                     st.session_state.global_gsheets_creds = gsheets_creds
                     st.session_state.gsheets_creds = gsheets_creds
-                st.rerun()
+                st.experimental_rerun()
         
         # Settings
         if st.button("⚙️ Settings", use_container_width=True):
             st.session_state.current_page = "Settings"
-            st.rerun()
+            st.experimental_rerun()
         
         st.divider()
         
