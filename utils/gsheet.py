@@ -36,7 +36,7 @@ def get_gsheet_client():
         return None, f"Error creating client: {str(e)}"
 
 def test_gsheet_connection(creds_data=None):
-    """Test Google Sheets connection"""
+    """Test Google Sheets connection without requiring a specific file ID"""
     try:
         if creds_data:
             # Test with provided credentials
@@ -47,20 +47,18 @@ def test_gsheet_connection(creds_data=None):
             
             creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_data, scope)
             client = gspread.authorize(creds)
-            
-            # Try to access a simple operation
-            client.list_permissions()
-            return True
-            
         else:
-            # Test with stored credentials
+            # Use stored client
             client, error = get_gsheet_client()
-            if client:
-                client.list_permissions()
-                return True
-            else:
+            if not client:
                 return False
-                
+        
+        # Try to list accessible spreadsheets as connection test
+        # This requires Drive API permission
+        spreadsheets = client.openall()
+        # If no exception, connection is good
+        return True
+        
     except Exception as e:
         st.error(f"Connection test failed: {str(e)}")
         return False
