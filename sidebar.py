@@ -82,7 +82,7 @@ def show_sidebar():
                 key=f"nav_{page['name']}"
             ):
                 st.session_state.current_page = page['name']
-                st.experimental_rerun()
+                st.rerun()
         
         st.divider()
         
@@ -161,8 +161,14 @@ def show_sidebar():
         
         st.caption(f"👤 User: {user_name}")
         st.caption(f"🎭 Role: {user_role.title()}")
-        if login_time != 'N/A':
+        
+        # Safe slicing for login_time
+        if isinstance(login_time, str) and len(login_time) >= 16:
             st.caption(f"🕐 Login: {login_time[:16]}")
+        elif isinstance(login_time, str):
+            st.caption(f"🕐 Login: {login_time}")
+        else:
+            st.caption("🕐 Login: N/A")
         
         # Footer info
         st.markdown(f"""
