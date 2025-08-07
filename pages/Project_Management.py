@@ -172,8 +172,18 @@ def load_live_tasks():
             'Report Date': ['2025-08-05', '', '2025-08-07']
         })
 
-# Load data
-tasks_df = load_live_tasks()
+# Google Sheet info
+SHEET_ID = "1NOOKyz9iUzwcsV0EcNJdVNQgQVL9bu3qsn_9wg7e1lE"
+SHEET_NAME = "Tasks"
+
+# Construct CSV export URL
+CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME}"
+
+# Load sheet as DataFrame
+df = pd.read_csv(CSV_URL)
+
+# Display the first few rows
+print(df.head())
 
 # Sidebar
 st.sidebar.title("🔧 System Controls")
