@@ -478,8 +478,12 @@ with tab2:
     if view_mode == "Cards":
         # Display tasks as cards
         for idx, task in filtered_df.iterrows():
-            priority_class = f"priority-{task.get('Priority', 'medium').lower()}"
-            status_class = f"status-{task.get('Status', 'todo').lower().replace(' ', '')}"
+            priority_val = task.get('Priority', 'medium')
+            status_val = task.get('Status', 'todo')
+            
+            # Safe handling of priority and status values
+            priority_class = f"priority-{str(priority_val).lower() if priority_val else 'medium'}"
+            status_class = f"status-{str(status_val).lower().replace(' ', '') if status_val else 'todo'}"
             
             st.markdown(f"""
             <div class="task-card {priority_class} {status_class}">
