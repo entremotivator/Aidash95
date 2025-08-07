@@ -158,8 +158,6 @@ def load_live_tasks():
     
     for i, url in enumerate(urls_to_try, 1):
         try:
-            st.info(f"🔄 Trying method {i}/5: {url.split('?')[0]}...")
-            
             # Add headers to mimic browser request
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -169,7 +167,6 @@ def load_live_tasks():
             
             # Check if we got a redirect to login (means sheet is private)
             if 'accounts.google.com' in response.url or response.status_code == 401:
-                st.warning(f"❌ Method {i}: Sheet appears to be private. Please check sharing settings.")
                 continue
                 
             response.raise_for_status()
@@ -177,7 +174,6 @@ def load_live_tasks():
             # Check if response contains actual CSV data
             content = response.text.strip()
             if len(content) < 10 or 'DOCTYPE html' in content:
-                st.warning(f"❌ Method {i}: Invalid response format")
                 continue
             
             # Try to parse as CSV
@@ -189,57 +185,15 @@ def load_live_tasks():
             
             # Check if we have meaningful data
             if len(df) > 0 and len(df.columns) > 1:
-                st.success(f"✅ Successfully loaded {len(df)} tasks using method {i}")
                 return df
             else:
-                st.warning(f"❌ Method {i}: Empty or invalid data")
                 continue
                 
-        except requests.exceptions.Timeout:
-            st.warning(f"❌ Method {i}: Request timed out")
-            continue
-        except requests.exceptions.ConnectionError:
-            st.warning(f"❌ Method {i}: Connection error")
-            continue
-        except requests.exceptions.HTTPError as e:
-            st.warning(f"❌ Method {i}: HTTP Error {e.response.status_code}")
-            continue
-        except pd.errors.EmptyDataError:
-            st.warning(f"❌ Method {i}: Empty CSV data")
-            continue
-        except Exception as e:
-            st.warning(f"❌ Method {i}: {str(e)}")
+        except:
             continue
     
     # If all methods failed, show instructions and return fallback data
-    st.error("❌ **All loading methods failed!**")
-    
-    with st.expander("🔧 **Troubleshooting Instructions**", expanded=True):
-        st.markdown("""
-        ### To fix the Google Sheets connection:
-        
-        1. **Make the sheet public:**
-           - Open your Google Sheet
-           - Click **Share** button (top right)
-           - Click **Change to anyone with the link**
-           - Set permission to **Viewer**
-           - Click **Done**
-        
-        2. **Alternative: Get the correct sheet ID:**
-           - In your sheet, click on the tab name at the bottom
-           - Note the **gid** number in the URL (e.g., `#gid=123456789`)
-           - Replace `gid=0` in the code with your actual gid
-        
-        3. **Check sheet name:**
-           - Make sure your sheet tab is named exactly **"Tasks"**
-           - Or update the sheet name in the code
-        
-        4. **Verify the Sheet ID:**
-           - Current ID: `{SHEET_ID}`
-           - Make sure this matches your actual Google Sheet ID
-        """)
-    
-    st.info("📋 **Using sample data for demonstration purposes**")
+    st.error("❌ **Failed to load Google Sheets data - using sample data**")
     
     # Return comprehensive fallback data
     return pd.DataFrame({
@@ -469,58 +423,15 @@ with tab2:
                 st.success(f"✅ Task '{new_task_id}' would be added to the system!")
                 st.info("💡 Note: This is a demo. In production, this would update the Google Sheet.")
     
-    # Task cards view
+    # Task grid view
     st.subheader("📋 Current Tasks")
     
-    # View options
-    view_mode = st.radio("View Mode", ["Cards", "Table"], horizontal=True)
-    
-    if view_mode == "Cards":
-        # Display tasks as cards
-        for idx, task in filtered_df.iterrows():
-            priority_val = task.get('Priority', 'medium')
-            status_val = task.get('Status', 'todo')
-            
-            # Safe handling of priority and status values
-            priority_class = f"priority-{str(priority_val).lower() if priority_val else 'medium'}"
-            status_class = f"status-{str(status_val).lower().replace(' ', '') if status_val else 'todo'}"
-            
-            st.markdown(f"""
-            <div class="task-card {priority_class} {status_class}">
-                <div style="display: flex; justify-content: between; align-items: center;">
-                    <h4 style="margin: 0; color: #1976d2;">🆔 {task.get('Task ID', 'N/A')} - {task.get('Task Description', 'No description')}</h4>
-                    <span style="background: #e3f2fd; padding: 5px 10px; border-radius: 15px; font-size: 12px; color: #1976d2;">
-                        {task.get('Priority', 'N/A')}
-                    </span>
-                </div>
-                <p style="margin: 10px 0; color: #666;">
-                    <strong>👤 Executor:</strong> {task.get('Executor', 'N/A')} | 
-                    <strong>🏢 Company:</strong> {task.get('Company', 'N/A')} | 
-                    <strong>📅 Date:</strong> {task.get('Date', 'N/A')}
-                </p>
-                <p style="margin: 10px 0; color: #666;">
-                    <strong>📍 Section:</strong> {task.get('Section', 'N/A')} | 
-                    <strong>🎯 Object:</strong> {task.get('Object', 'N/A')} | 
-                    <strong>📊 Status:</strong> {task.get('Status', 'N/A')}
-                </p>
-                <p style="margin: 10px 0; color: #666;">
-                    <strong>⏰ Reminder:</strong> {task.get('Reminder Time', 'N/A')} | 
-                    <strong>📧 Sent:</strong> {task.get('Reminder Sent', 'N/A')} | 
-                    <strong>👁️ Read:</strong> {task.get('Reminder Read', 'N/A')}
-                </p>
-                <p style="margin: 10px 0; color: #666;">
-                    <strong>💬 Comment:</strong> {task.get('Comment', 'No comment')}
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    else:
-        # Display as table
-        st.dataframe(
-            filtered_df,
-            use_container_width=True,
-            height=600
-        )
+    # Display as grid/table
+    st.dataframe(
+        filtered_df,
+        use_container_width=True,
+        height=600
+    )
 
 with tab3:
     st.header("📊 Analytics & Insights")
