@@ -423,15 +423,88 @@ with tab2:
                 st.success(f"✅ Task '{new_task_id}' would be added to the system!")
                 st.info("💡 Note: This is a demo. In production, this would update the Google Sheet.")
     
-    # Task grid view
+    # Task cards view
     st.subheader("📋 Current Tasks")
     
-    # Display as grid/table
-    st.dataframe(
-        filtered_df,
-        use_container_width=True,
-        height=600
-    )
+    # Display tasks as detailed cards
+    for idx, task in filtered_df.iterrows():
+        priority_val = task.get('Priority', 'medium')
+        status_val = task.get('Status', 'todo')
+        
+        # Safe handling of priority and status values
+        priority_class = f"priority-{str(priority_val).lower() if priority_val else 'medium'}"
+        status_class = f"status-{str(status_val).lower().replace(' ', '') if status_val else 'todo'}"
+        
+        # Create expanded card with all data
+        st.markdown(f"""
+        <div class="task-card {priority_class} {status_class}" style="margin: 20px 0; padding: 25px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0; color: #1976d2;">🆔 {task.get('Task ID', 'N/A')}</h3>
+                <div style="display: flex; gap: 10px;">
+                    <span style="background: #e3f2fd; padding: 8px 15px; border-radius: 20px; font-size: 14px; color: #1976d2; font-weight: 600;">
+                        {task.get('Priority', 'N/A')} Priority
+                    </span>
+                    <span style="background: #f0f8ff; padding: 8px 15px; border-radius: 20px; font-size: 14px; color: #333; font-weight: 600;">
+                        {task.get('Status', 'N/A')}
+                    </span>
+                </div>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                <h4 style="color: #1976d2; margin: 0 0 10px 0;">📝 Task Description</h4>
+                <p style="margin: 0; color: #333; font-size: 16px; line-height: 1.5;">
+                    {task.get('Task Description', 'No description available')}
+                </p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin: 20px 0;">
+                <div>
+                    <h5 style="color: #1976d2; margin: 0 0 8px 0;">👤 Assignment</h5>
+                    <p style="margin: 0; color: #666;"><strong>Executor:</strong> {task.get('Executor', 'N/A')}</p>
+                    <p style="margin: 5px 0 0 0; color: #666;"><strong>ID:</strong> {task.get('Executor ID', 'N/A')}</p>
+                    <p style="margin: 5px 0 0 0; color: #666;"><strong>Company:</strong> {task.get('Company', 'N/A')}</p>
+                </div>
+                
+                <div>
+                    <h5 style="color: #1976d2; margin: 0 0 8px 0;">📅 Timeline</h5>
+                    <p style="margin: 0; color: #666;"><strong>Date:</strong> {task.get('Date', 'N/A')}</p>
+                    <p style="margin: 5px 0 0 0; color: #666;"><strong>Reminder Time:</strong> {task.get('Reminder Time', 'N/A')}</p>
+                    <p style="margin: 5px 0 0 0; color: #666;"><strong>Report Date:</strong> {task.get('Report Date', 'N/A')}</p>
+                </div>
+                
+                <div>
+                    <h5 style="color: #1976d2; margin: 0 0 8px 0;">🎯 Details</h5>
+                    <p style="margin: 0; color: #666;"><strong>Object:</strong> {task.get('Object', 'N/A')}</p>
+                    <p style="margin: 5px 0 0 0; color: #666;"><strong>Section:</strong> {task.get('Section', 'N/A')}</p>
+                </div>
+            </div>
+            
+            <div style="background: #fff3e0; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                <h5 style="color: #1976d2; margin: 0 0 10px 0;">⏰ Reminder Status</h5>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div>
+                        <p style="margin: 0; color: #666;"><strong>📧 Sent:</strong> {task.get('Reminder Sent', 'N/A')}</p>
+                        <p style="margin: 5px 0 0 0; color: #666;"><strong>📅 Sent Date:</strong> {task.get('Reminder Sent Date', 'N/A')}</p>
+                    </div>
+                    <div>
+                        <p style="margin: 0; color: #666;"><strong>👁️ Read:</strong> {task.get('Reminder Read', 'N/A')}</p>
+                        <p style="margin: 5px 0 0 0; color: #666;"><strong>⏱️ Read Time:</strong> {task.get('Read Time', 'N/A')}</p>
+                    </div>
+                    <div>
+                        <p style="margin: 0; color: #666;"><strong>🔢 Count:</strong> {task.get('Reminder Count', '0')}</p>
+                        <p style="margin: 5px 0 0 0; color: #666;"><strong>⏳ Interval:</strong> {task.get('Reminder Interval if No Report', 'N/A')}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background: #e8f5e8; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                <h5 style="color: #1976d2; margin: 0 0 10px 0;">💬 Comments</h5>
+                <p style="margin: 0; color: #333; font-style: italic;">
+                    {task.get('Comment', 'No comments available')}
+                </p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 with tab3:
     st.header("📊 Analytics & Insights")
