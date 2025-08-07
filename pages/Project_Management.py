@@ -141,66 +141,134 @@ SHEET_ID = "1NOOKyz9iUzwcsV0EcNJdVNQgQVL9bu3qsn_9wg7e1lE"
 @st.cache_data(ttl=60)  # Cache for 1 minute
 def load_live_tasks():
     """Load tasks from Google Sheets live link"""
-    try:
-        # Primary method: Export URL
-        csv_url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=0"
-        response = requests.get(csv_url, timeout=10)
-        response.raise_for_status()
-        
-        df = pd.read_csv(StringIO(response.text))
-        df.columns = df.columns.str.strip()
-        df = df.dropna(how='all')
-        
-        if len(df) > 0:
-            st.success(f"✅ Successfully loaded {len(df)} tasks from Google Sheets")
-            return df
-        else:
-            raise ValueError("Empty dataset")
-            
-    except Exception as e:
-        st.warning(f"Primary method failed: {str(e)}. Trying alternative...")
-        
+    
+    # List of URLs to try in order
+    urls_to_try = [
+        # Method 1: Standard CSV export with gid=0 (first sheet)
+        f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=0",
+        # Method 2: Try without gid parameter
+        f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv",
+        # Method 3: Using sheet name in the URL path
+        f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv",
+        # Method 4: Original format with sheet name
+        f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gsheet?tqx=out:csv&sheet=Sheet1",
+        # Method 5: Try with different sheet names
+        f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gsheet?tqx=out:csv&sheet=Tasks",
+    ]
+    
+    for i, url in enumerate(urls_to_try, 1):
         try:
-            # Alternative method: Original gsheet URL
-            csv_url_alt = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gsheet?tqx=out:csv&sheet=Tasks"
-            response = requests.get(csv_url_alt, timeout=10)
+            st.info(f"🔄 Trying method {i}/5: {url.split('?')[0]}...")
+            
+            # Add headers to mimic browser request
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            
+            response = requests.get(url, headers=headers, timeout=15)
+            
+            # Check if we got a redirect to login (means sheet is private)
+            if 'accounts.google.com' in response.url or response.status_code == 401:
+                st.warning(f"❌ Method {i}: Sheet appears to be private. Please check sharing settings.")
+                continue
+                
             response.raise_for_status()
             
-            df = pd.read_csv(StringIO(response.text))
+            # Check if response contains actual CSV data
+            content = response.text.strip()
+            if len(content) < 10 or 'DOCTYPE html' in content:
+                st.warning(f"❌ Method {i}: Invalid response format")
+                continue
+            
+            # Try to parse as CSV
+            df = pd.read_csv(StringIO(content))
+            
+            # Clean and validate data
             df.columns = df.columns.str.strip()
             df = df.dropna(how='all')
             
-            if len(df) > 0:
-                st.info(f"✅ Loaded {len(df)} tasks using alternative method")
+            # Check if we have meaningful data
+            if len(df) > 0 and len(df.columns) > 1:
+                st.success(f"✅ Successfully loaded {len(df)} tasks using method {i}")
                 return df
             else:
-                raise ValueError("Alternative method also returned empty data")
+                st.warning(f"❌ Method {i}: Empty or invalid data")
+                continue
                 
-        except Exception as e2:
-            st.error(f"Both loading methods failed. Using fallback data. Errors: {str(e)} | {str(e2)}")
-            
-            # Fallback to sample data
-            return pd.DataFrame({
-                'Task ID': ['ID1', 'ID2', 'ID3'],
-                'Executor': ['John Doe', 'Jane Smith', 'Bob Wilson'],
-                'Date': ['2025-08-05', '2025-08-06', '2025-08-07'],
-                'Reminder Time': ['09:00', '14:00', '10:30'],
-                'Task Description': ['Sample Task 1', 'Sample Task 2', 'Sample Task 3'],
-                'Object': ['Object 1', 'Object 2', 'Object 3'],
-                'Section': ['Section A', 'Section B', 'Section C'],
-                'Priority': ['High', 'Medium', 'Low'],
-                'Executor ID': ['1001', '1002', '1003'],
-                'Company': ['Company A', 'Company B', 'Company C'],
-                'Reminder Sent': ['Yes', 'No', 'Yes'],
-                'Reminder Sent Date': ['2025-08-05', '', '2025-08-07'],
-                'Reminder Read': ['Yes', 'No', 'No'],
-                'Read Time': ['09:15', '', ''],
-                'Reminder Count': ['1', '0', '2'],
-                'Reminder Interval if No Report': ['24h', '12h', '6h'],
-                'Status': ['In Progress', 'Pending', 'Completed'],
-                'Comment': ['On track', 'Waiting for approval', 'Done'],
-                'Report Date': ['2025-08-05', '', '2025-08-07']
-            })
+        except requests.exceptions.Timeout:
+            st.warning(f"❌ Method {i}: Request timed out")
+            continue
+        except requests.exceptions.ConnectionError:
+            st.warning(f"❌ Method {i}: Connection error")
+            continue
+        except requests.exceptions.HTTPError as e:
+            st.warning(f"❌ Method {i}: HTTP Error {e.response.status_code}")
+            continue
+        except pd.errors.EmptyDataError:
+            st.warning(f"❌ Method {i}: Empty CSV data")
+            continue
+        except Exception as e:
+            st.warning(f"❌ Method {i}: {str(e)}")
+            continue
+    
+    # If all methods failed, show instructions and return fallback data
+    st.error("❌ **All loading methods failed!**")
+    
+    with st.expander("🔧 **Troubleshooting Instructions**", expanded=True):
+        st.markdown("""
+        ### To fix the Google Sheets connection:
+        
+        1. **Make the sheet public:**
+           - Open your Google Sheet
+           - Click **Share** button (top right)
+           - Click **Change to anyone with the link**
+           - Set permission to **Viewer**
+           - Click **Done**
+        
+        2. **Alternative: Get the correct sheet ID:**
+           - In your sheet, click on the tab name at the bottom
+           - Note the **gid** number in the URL (e.g., `#gid=123456789`)
+           - Replace `gid=0` in the code with your actual gid
+        
+        3. **Check sheet name:**
+           - Make sure your sheet tab is named exactly **"Tasks"**
+           - Or update the sheet name in the code
+        
+        4. **Verify the Sheet ID:**
+           - Current ID: `{SHEET_ID}`
+           - Make sure this matches your actual Google Sheet ID
+        """)
+    
+    st.info("📋 **Using sample data for demonstration purposes**")
+    
+    # Return comprehensive fallback data
+    return pd.DataFrame({
+        'Task ID': ['TSK001', 'TSK002', 'TSK003', 'TSK004', 'TSK005'],
+        'Executor': ['John Doe', 'Jane Smith', 'Bob Wilson', 'Alice Brown', 'Charlie Davis'],
+        'Date': ['2025-08-05', '2025-08-06', '2025-08-07', '2025-08-08', '2025-08-09'],
+        'Reminder Time': ['09:00', '14:00', '10:30', '16:00', '11:15'],
+        'Task Description': [
+            'Complete project documentation',
+            'Review system requirements', 
+            'Update database schema',
+            'Deploy to staging environment',
+            'Conduct user acceptance testing'
+        ],
+        'Object': ['Documentation', 'Requirements', 'Database', 'Deployment', 'Testing'],
+        'Section': ['Development', 'Analysis', 'Database', 'DevOps', 'QA'],
+        'Priority': ['High', 'Medium', 'Low', 'High', 'Medium'],
+        'Executor ID': ['1001', '1002', '1003', '1004', '1005'],
+        'Company': ['TechCorp', 'DataSys', 'DevTools', 'CloudInc', 'TestLab'],
+        'Reminder Sent': ['Yes', 'No', 'Yes', 'No', 'Yes'],
+        'Reminder Sent Date': ['2025-08-05', '', '2025-08-07', '', '2025-08-09'],
+        'Reminder Read': ['Yes', 'No', 'No', 'No', 'Yes'],
+        'Read Time': ['09:15', '', '', '', '11:30'],
+        'Reminder Count': ['1', '0', '2', '0', '1'],
+        'Reminder Interval if No Report': ['24h', '12h', '6h', '48h', '24h'],
+        'Status': ['In Progress', 'Pending', 'Completed', 'Pending', 'In Progress'],
+        'Comment': ['On track', 'Waiting for approval', 'Done', 'Not started', 'In review'],
+        'Report Date': ['2025-08-05', '', '2025-08-07', '', '2025-08-09']
+    })
 
 # Load data
 tasks_df = load_live_tasks()
@@ -650,4 +718,3 @@ if auto_refresh:
     import time
     time.sleep(60)
     st.rerun()
-
