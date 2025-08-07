@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from io import StringIO
 
 # Page configuration
 st.set_page_config(
@@ -134,43 +135,72 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Google Sheets integration
+# Google Sheets integration - FIXED VERSION
 SHEET_ID = "1NOOKyz9iUzwcsV0EcNJdVNQgQVL9bu3qsn_9wg7e1lE"
-SHEET_NAME = "Tasks"  # The sheet tab name
-CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gsheet?tqx=out:csv&sheet={SHEET_NAME}"
 
 @st.cache_data(ttl=60)  # Cache for 1 minute
 def load_live_tasks():
     """Load tasks from Google Sheets live link"""
     try:
-        df = pd.read_csv(CSV_URL)
-        # Clean column names
+        # Primary method: Export URL
+        csv_url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=0"
+        response = requests.get(csv_url, timeout=10)
+        response.raise_for_status()
+        
+        df = pd.read_csv(StringIO(response.text))
         df.columns = df.columns.str.strip()
-        return df
+        df = df.dropna(how='all')
+        
+        if len(df) > 0:
+            st.success(f"✅ Successfully loaded {len(df)} tasks from Google Sheets")
+            return df
+        else:
+            raise ValueError("Empty dataset")
+            
     except Exception as e:
-        st.error(f"Error loading live data: {str(e)}")
-        # Fallback to sample data
-        return pd.DataFrame({
-            'Task ID': ['ID1', 'ID2', 'ID3'],
-            'Executor': ['John Doe', 'Jane Smith', 'Bob Wilson'],
-            'Date': ['2025-08-05', '2025-08-06', '2025-08-07'],
-            'Reminder Time': ['09:00', '14:00', '10:30'],
-            'Task Description': ['Sample Task 1', 'Sample Task 2', 'Sample Task 3'],
-            'Object': ['Object 1', 'Object 2', 'Object 3'],
-            'Section': ['Section A', 'Section B', 'Section C'],
-            'Priority': ['High', 'Medium', 'Low'],
-            'Executor ID': ['1001', '1002', '1003'],
-            'Company': ['Company A', 'Company B', 'Company C'],
-            'Reminder Sent': ['Yes', 'No', 'Yes'],
-            'Reminder Sent Date': ['2025-08-05', '', '2025-08-07'],
-            'Reminder Read': ['Yes', 'No', 'No'],
-            'Read Time': ['09:15', '', ''],
-            'Reminder Count': ['1', '0', '2'],
-            'Reminder Interval if No Report': ['24h', '12h', '6h'],
-            'Status': ['In Progress', 'Pending', 'Completed'],
-            'Comment': ['On track', 'Waiting for approval', 'Done'],
-            'Report Date': ['2025-08-05', '', '2025-08-07']
-        })
+        st.warning(f"Primary method failed: {str(e)}. Trying alternative...")
+        
+        try:
+            # Alternative method: Original gsheet URL
+            csv_url_alt = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gsheet?tqx=out:csv&sheet=Tasks"
+            response = requests.get(csv_url_alt, timeout=10)
+            response.raise_for_status()
+            
+            df = pd.read_csv(StringIO(response.text))
+            df.columns = df.columns.str.strip()
+            df = df.dropna(how='all')
+            
+            if len(df) > 0:
+                st.info(f"✅ Loaded {len(df)} tasks using alternative method")
+                return df
+            else:
+                raise ValueError("Alternative method also returned empty data")
+                
+        except Exception as e2:
+            st.error(f"Both loading methods failed. Using fallback data. Errors: {str(e)} | {str(e2)}")
+            
+            # Fallback to sample data
+            return pd.DataFrame({
+                'Task ID': ['ID1', 'ID2', 'ID3'],
+                'Executor': ['John Doe', 'Jane Smith', 'Bob Wilson'],
+                'Date': ['2025-08-05', '2025-08-06', '2025-08-07'],
+                'Reminder Time': ['09:00', '14:00', '10:30'],
+                'Task Description': ['Sample Task 1', 'Sample Task 2', 'Sample Task 3'],
+                'Object': ['Object 1', 'Object 2', 'Object 3'],
+                'Section': ['Section A', 'Section B', 'Section C'],
+                'Priority': ['High', 'Medium', 'Low'],
+                'Executor ID': ['1001', '1002', '1003'],
+                'Company': ['Company A', 'Company B', 'Company C'],
+                'Reminder Sent': ['Yes', 'No', 'Yes'],
+                'Reminder Sent Date': ['2025-08-05', '', '2025-08-07'],
+                'Reminder Read': ['Yes', 'No', 'No'],
+                'Read Time': ['09:15', '', ''],
+                'Reminder Count': ['1', '0', '2'],
+                'Reminder Interval if No Report': ['24h', '12h', '6h'],
+                'Status': ['In Progress', 'Pending', 'Completed'],
+                'Comment': ['On track', 'Waiting for approval', 'Done'],
+                'Report Date': ['2025-08-05', '', '2025-08-07']
+            })
 
 # Load data
 tasks_df = load_live_tasks()
@@ -582,8 +612,8 @@ with tab6:
     
     st.subheader("🔗 Data Source Configuration")
     st.info(f"📊 **Google Sheets ID:** {SHEET_ID}")
-    st.info(f"📋 **Sheet Name:** {SHEET_NAME}")
-    st.info(f"🔗 **CSV URL:** {CSV_URL}")
+    st.info("📋 **Primary URL:** /export?format=csv&gid=0")
+    st.info("🔄 **Fallback URL:** /gsheet?tqx=out:csv&sheet=Tasks")
     
     st.subheader("🔄 Refresh Settings")
     st.info("⏱️ **Cache TTL:** 60 seconds")
@@ -607,7 +637,7 @@ with tab6:
 
 # Footer
 st.markdown("---")
-st.markdown("""
+st.markdown(f"""
 <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #e3f2fd, #f0f8ff); border-radius: 15px; margin-top: 20px;">
     <h3 style="color: #1976d2; margin: 0;">🚀 Enhanced Project Management System</h3>
     <p style="color: #666; margin: 10px 0;">Live Google Sheets Integration • Real-time Data • Advanced Analytics</p>
