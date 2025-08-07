@@ -393,50 +393,52 @@ with tab2:
     view_mode = st.radio("View Mode", ["Cards", "Table"], horizontal=True)
     
     if view_mode == "Cards":
-        # Display tasks as cards
-        for idx, task in filtered_df.iterrows():
-            priority_class = f"priority-{task.get('Priority', 'medium').lower()}"
-            status_value = task['Status'] if 'Status' in task and pd.notna(task['Status']) else 'todo'
-            status_class = f"status-{status_value.lower().replace(' ', '')}"
+    # Display tasks as cards
+    for idx, task in filtered_df.iterrows():
+        # Safely access priority and status
+        priority_value = task['Priority'] if 'Priority' in task and pd.notna(task['Priority']) else 'medium'
+        priority_class = f"priority-{priority_value.lower()}"
 
-            
-            st.markdown(f"""
-            <div class="task-card {priority_class} {status_class}">
-                <div style="display: flex; justify-content: between; align-items: center;">
-                    <h4 style="margin: 0; color: #1976d2;">🆔 {task.get('Task ID', 'N/A')} - {task.get('Task Description', 'No description')}</h4>
-                    <span style="background: #e3f2fd; padding: 5px 10px; border-radius: 15px; font-size: 12px; color: #1976d2;">
-                        {task.get('Priority', 'N/A')}
-                    </span>
-                </div>
-                <p style="margin: 10px 0; color: #666;">
-                    <strong>👤 Executor:</strong> {task.get('Executor', 'N/A')} | 
-                    <strong>🏢 Company:</strong> {task.get('Company', 'N/A')} | 
-                    <strong>📅 Date:</strong> {task.get('Date', 'N/A')}
-                </p>
-                <p style="margin: 10px 0; color: #666;">
-                    <strong>📍 Section:</strong> {task.get('Section', 'N/A')} | 
-                    <strong>🎯 Object:</strong> {task.get('Object', 'N/A')} | 
-                    <strong>📊 Status:</strong> {task.get('Status', 'N/A')}
-                </p>
-                <p style="margin: 10px 0; color: #666;">
-                    <strong>⏰ Reminder:</strong> {task.get('Reminder Time', 'N/A')} | 
-                    <strong>📧 Sent:</strong> {task.get('Reminder Sent', 'N/A')} | 
-                    <strong>👁️ Read:</strong> {task.get('Reminder Read', 'N/A')}
-                </p>
-                <p style="margin: 10px 0; color: #666;">
-                    <strong>💬 Comment:</strong> {task.get('Comment', 'No comment')}
-                </p>
+        status_value = task['Status'] if 'Status' in task and pd.notna(task['Status']) else 'todo'
+        status_class = f"status-{status_value.lower().replace(' ', '')}"
+
+        # Render card
+        st.markdown(f"""
+        <div class="task-card {priority_class} {status_class}" style="border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-bottom: 15px; background-color: #f9f9f9;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h4 style="margin: 0; color: #1976d2;">🆔 {task.get('Task ID', 'N/A')} - {task.get('Task Description', 'No description')}</h4>
+                <span style="background: #e3f2fd; padding: 5px 10px; border-radius: 15px; font-size: 12px; color: #1976d2;">
+                    {task.get('Priority', 'N/A')}
+                </span>
             </div>
-            """, unsafe_allow_html=True)
-    
-    else:
-        # Display as table
-        st.dataframe(
-            filtered_df,
-            use_container_width=True,
-            height=600
-        )
+            <p style="margin: 10px 0; color: #666;">
+                <strong>👤 Executor:</strong> {task.get('Executor', 'N/A')} | 
+                <strong>🏢 Company:</strong> {task.get('Company', 'N/A')} | 
+                <strong>📅 Date:</strong> {task.get('Date', 'N/A')}
+            </p>
+            <p style="margin: 10px 0; color: #666;">
+                <strong>📍 Section:</strong> {task.get('Section', 'N/A')} | 
+                <strong>🎯 Object:</strong> {task.get('Object', 'N/A')} | 
+                <strong>📊 Status:</strong> {task.get('Status', 'N/A')}
+            </p>
+            <p style="margin: 10px 0; color: #666;">
+                <strong>⏰ Reminder:</strong> {task.get('Reminder Time', 'N/A')} | 
+                <strong>📧 Sent:</strong> {task.get('Reminder Sent', 'N/A')} | 
+                <strong>👁️ Read:</strong> {task.get('Reminder Read', 'N/A')}
+            </p>
+            <p style="margin: 10px 0; color: #666;">
+                <strong>💬 Comment:</strong> {task.get('Comment', 'No comment')}
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
+else:
+    # Display as table
+    st.dataframe(
+        filtered_df,
+        use_container_width=True,
+        height=600
+    )
 with tab3:
     st.header("📊 Analytics & Insights")
     
