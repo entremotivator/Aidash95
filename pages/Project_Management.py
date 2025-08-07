@@ -431,42 +431,7 @@ with tab2:
         filtered_df,
         use_container_width=True,
         height=600
-    ) #666;"><strong>Report Date:</strong> {task.get('Report Date', 'N/A')}</p>
-                </div>
-                
-                <div>
-                    <h5 style="color: #1976d2; margin: 0 0 8px 0;">🎯 Details</h5>
-                    <p style="margin: 0; color: #666;"><strong>Object:</strong> {task.get('Object', 'N/A')}</p>
-                    <p style="margin: 5px 0 0 0; color: #666;"><strong>Section:</strong> {task.get('Section', 'N/A')}</p>
-                </div>
-            </div>
-            
-            <div style="background: #fff3e0; padding: 15px; border-radius: 10px; margin: 15px 0;">
-                <h5 style="color: #1976d2; margin: 0 0 10px 0;">⏰ Reminder Status</h5>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                    <div>
-                        <p style="margin: 0; color: #666;"><strong>📧 Sent:</strong> {task.get('Reminder Sent', 'N/A')}</p>
-                        <p style="margin: 5px 0 0 0; color: #666;"><strong>📅 Sent Date:</strong> {task.get('Reminder Sent Date', 'N/A')}</p>
-                    </div>
-                    <div>
-                        <p style="margin: 0; color: #666;"><strong>👁️ Read:</strong> {task.get('Reminder Read', 'N/A')}</p>
-                        <p style="margin: 5px 0 0 0; color: #666;"><strong>⏱️ Read Time:</strong> {task.get('Read Time', 'N/A')}</p>
-                    </div>
-                    <div>
-                        <p style="margin: 0; color: #666;"><strong>🔢 Count:</strong> {task.get('Reminder Count', '0')}</p>
-                        <p style="margin: 5px 0 0 0; color: #666;"><strong>⏳ Interval:</strong> {task.get('Reminder Interval if No Report', 'N/A')}</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div style="background: #e8f5e8; padding: 15px; border-radius: 10px; margin: 15px 0;">
-                <h5 style="color: #1976d2; margin: 0 0 10px 0;">💬 Comments</h5>
-                <p style="margin: 0; color: #333; font-style: italic;">
-                    {task.get('Comment', 'No comments available')}
-                </p>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+    )
 
 with tab3:
     st.header("📊 Analytics & Insights")
@@ -557,52 +522,18 @@ with tab4:
         ])
         st.metric("⏳ Pending Actions", pending_reminders)
     
-    # Reminder details cards
+    # Reminder details table
     st.subheader("📋 Reminder Details")
+    reminder_columns = ['Task ID', 'Executor', 'Task Description', 'Reminder Time', 
+                       'Reminder Sent', 'Reminder Sent Date', 'Reminder Read', 'Read Time']
+    available_columns = [col for col in reminder_columns if col in filtered_df.columns]
     
-    for idx, task in filtered_df.iterrows():
-        if 'Reminder Sent' in task and task.get('Reminder Sent', '').lower() == 'yes':
-            st.markdown(f"""
-            <div class="task-card" style="margin: 15px 0; padding: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h4 style="margin: 0; color: #1976d2;">🔔 {task.get('Task ID', 'N/A')} - Reminder Active</h4>
-                    <span style="background: #e8f5e8; padding: 6px 12px; border-radius: 15px; font-size: 12px; color: #2e7d32;">
-                        ✅ Sent
-                    </span>
-                </div>
-                
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-                    <p style="margin: 0; color: #333;"><strong>📝 Task:</strong> {task.get('Task Description', 'N/A')}</p>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin: 15px 0;">
-                    <div>
-                        <p style="margin: 0; color: #666;"><strong>👤 Executor:</strong> {task.get('Executor', 'N/A')}</p>
-                    </div>
-                    <div>
-                        <p style="margin: 0; color: #666;"><strong>⏰ Reminder Time:</strong> {task.get('Reminder Time', 'N/A')}</p>
-                    </div>
-                    <div>
-                        <p style="margin: 0; color: #666;"><strong>📅 Sent Date:</strong> {task.get('Reminder Sent Date', 'N/A')}</p>
-                    </div>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div>
-                        <p style="margin: 0; color: #666;"><strong>👁️ Read Status:</strong> 
-                            <span style="color: {'#4caf50' if task.get('Reminder Read', '').lower() == 'yes' else '#f44336'};">
-                                {task.get('Reminder Read', 'N/A')}
-                            </span>
-                        </p>
-                        <p style="margin: 5px 0 0 0; color: #666;"><strong>⏱️ Read Time:</strong> {task.get('Read Time', 'N/A')}</p>
-                    </div>
-                    <div>
-                        <p style="margin: 0; color: #666;"><strong>🔢 Reminder Count:</strong> {task.get('Reminder Count', '0')}</p>
-                        <p style="margin: 5px 0 0 0; color: #666;"><strong>⏳ Interval:</strong> {task.get('Reminder Interval if No Report', 'N/A')}</p>
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+    if available_columns:
+        st.dataframe(
+            filtered_df[available_columns],
+            use_container_width=True,
+            height=400
+        )
 
 with tab5:
     st.header("📈 Reports & Export")
@@ -631,48 +562,33 @@ with tab5:
         if st.button("📄 Generate Report", use_container_width=True):
             st.info("📄 PDF report generation would be available in production version")
     
-    # Summary statistics as cards
+    # Summary statistics
     st.subheader("📊 Summary Statistics")
     
     if not filtered_df.empty:
-        # Create metric cards for summary
-        col1, col2, col3 = st.columns(3)
+        summary_data = {
+            "Metric": [
+                "Total Tasks",
+                "Unique Executors", 
+                "Unique Companies",
+                "High Priority Tasks",
+                "Completed Tasks",
+                "Reminders Sent",
+                "Reminders Read"
+            ],
+            "Value": [
+                len(filtered_df),
+                filtered_df['Executor'].nunique() if 'Executor' in filtered_df.columns else 0,
+                filtered_df['Company'].nunique() if 'Company' in filtered_df.columns else 0,
+                len(filtered_df[filtered_df['Priority'].str.contains('High', case=False, na=False)]),
+                len(filtered_df[filtered_df['Status'].str.contains('Completed|Done', case=False, na=False)]),
+                len(filtered_df[filtered_df['Reminder Sent'].str.contains('Yes', case=False, na=False)]),
+                len(filtered_df[filtered_df['Reminder Read'].str.contains('Yes', case=False, na=False)])
+            ]
+        }
         
-        with col1:
-            st.markdown(f"""
-            <div class="metric-card">
-                <h4 style="color: #1976d2; margin: 0;">📊 Data Overview</h4>
-                <p style="margin: 10px 0; color: #666;"><strong>Total Tasks:</strong> {len(filtered_df)}</p>
-                <p style="margin: 5px 0; color: #666;"><strong>Unique Executors:</strong> {filtered_df['Executor'].nunique() if 'Executor' in filtered_df.columns else 0}</p>
-                <p style="margin: 5px 0; color: #666;"><strong>Unique Companies:</strong> {filtered_df['Company'].nunique() if 'Company' in filtered_df.columns else 0}</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            completed_tasks = len(filtered_df[filtered_df['Status'].str.contains('Completed|Done', case=False, na=False)])
-            high_priority = len(filtered_df[filtered_df['Priority'].str.contains('High', case=False, na=False)])
-            
-            st.markdown(f"""
-            <div class="metric-card">
-                <h4 style="color: #4caf50; margin: 0;">✅ Task Status</h4>
-                <p style="margin: 10px 0; color: #666;"><strong>Completed Tasks:</strong> {completed_tasks}</p>
-                <p style="margin: 5px 0; color: #666;"><strong>High Priority:</strong> {high_priority}</p>
-                <p style="margin: 5px 0; color: #666;"><strong>Completion Rate:</strong> {(completed_tasks/len(filtered_df)*100):.1f}%</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col3:
-            reminders_sent = len(filtered_df[filtered_df['Reminder Sent'].str.contains('Yes', case=False, na=False)])
-            reminders_read = len(filtered_df[filtered_df['Reminder Read'].str.contains('Yes', case=False, na=False)])
-            
-            st.markdown(f"""
-            <div class="metric-card">
-                <h4 style="color: #ff9800; margin: 0;">⏰ Reminders</h4>
-                <p style="margin: 10px 0; color: #666;"><strong>Reminders Sent:</strong> {reminders_sent}</p>
-                <p style="margin: 5px 0; color: #666;"><strong>Reminders Read:</strong> {reminders_read}</p>
-                <p style="margin: 5px 0; color: #666;"><strong>Read Rate:</strong> {(reminders_read/max(reminders_sent,1)*100):.1f}%</p>
-            </div>
-            """, unsafe_allow_html=True)
+        summary_df = pd.DataFrame(summary_data)
+        st.dataframe(summary_df, use_container_width=True, hide_index=True)
 
 with tab6:
     st.header("⚙️ System Settings")
@@ -688,44 +604,19 @@ with tab6:
     
     st.subheader("📊 Data Quality")
     if not tasks_df.empty:
-        st.markdown(f"""
-        <div class="metric-card">
-            <h4 style="color: #4caf50; margin: 0;">✅ Connection Status</h4>
-            <p style="margin: 10px 0; color: #666;"><strong>Data loaded successfully:</strong> {len(tasks_df)} records</p>
-            <p style="margin: 5px 0; color: #666;"><strong>Last updated:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-            <p style="margin: 5px 0; color: #666;"><strong>Columns available:</strong> {len(tasks_df.columns)}</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.success(f"✅ **Data loaded successfully:** {len(tasks_df)} records")
+        st.info(f"📅 **Last updated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
-        # Show column information as cards
+        # Show column information
         st.subheader("📋 Available Columns")
-        
-        # Group columns into rows of 3
-        columns = list(tasks_df.columns)
-        for i in range(0, len(columns), 3):
-            col_group = columns[i:i+3]
-            cols = st.columns(len(col_group))
-            
-            for idx, col_name in enumerate(col_group):
-                with cols[idx]:
-                    non_null_count = tasks_df[col_name].count()
-                    data_type = str(tasks_df[col_name].dtype)
-                    
-                    st.markdown(f"""
-                    <div class="task-card" style="padding: 15px; margin: 10px 0;">
-                        <h5 style="color: #1976d2; margin: 0 0 10px 0;">📄 {col_name}</h5>
-                        <p style="margin: 5px 0; color: #666; font-size: 14px;"><strong>Type:</strong> {data_type}</p>
-                        <p style="margin: 5px 0; color: #666; font-size: 14px;"><strong>Non-null:</strong> {non_null_count}/{len(tasks_df)}</p>
-                        <p style="margin: 5px 0; color: #666; font-size: 14px;"><strong>Fill Rate:</strong> {(non_null_count/len(tasks_df)*100):.1f}%</p>
-                    </div>
-                    """, unsafe_allow_html=True)
+        cols_info = pd.DataFrame({
+            'Column': tasks_df.columns,
+            'Type': [str(dtype) for dtype in tasks_df.dtypes],
+            'Non-null Count': [tasks_df[col].count() for col in tasks_df.columns]
+        })
+        st.dataframe(cols_info, use_container_width=True, hide_index=True)
     else:
-        st.markdown("""
-        <div class="metric-card" style="border-left: 4px solid #f44336;">
-            <h4 style="color: #f44336; margin: 0;">❌ Connection Error</h4>
-            <p style="margin: 10px 0; color: #666;">No data available</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.error("❌ **No data available**")afe_allow_html=True)
 
 # Footer
 st.markdown("---")
