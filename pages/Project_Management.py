@@ -134,22 +134,21 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Google Sheets integration
+# --- Google Sheets integration ---
 SHEET_ID = "1NOOKyz9iUzwcsV0EcNJdVNQgQVL9bu3qsn_9wg7e1lE"
 SHEET_NAME = "Tasks"  # The sheet tab name
-CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gsheet?tqx=out:csv&sheet={SHEET_NAME}"
+CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME}"
 
-@st.cache_data(ttl=60)  # Cache for 1 minute
+@st.cache_data(ttl=60)  # Cache data for 1 minute
 def load_live_tasks():
     """Load tasks from Google Sheets live link"""
     try:
         df = pd.read_csv(CSV_URL)
-        # Clean column names
-        df.columns = df.columns.str.strip()
+        df.columns = df.columns.str.strip()  # Clean column names
         return df
     except Exception as e:
         st.error(f"Error loading live data: {str(e)}")
-        # Fallback to sample data
+        # Fallback sample data
         return pd.DataFrame({
             'Task ID': ['ID1', 'ID2', 'ID3'],
             'Executor': ['John Doe', 'Jane Smith', 'Bob Wilson'],
@@ -172,18 +171,24 @@ def load_live_tasks():
             'Report Date': ['2025-08-05', '', '2025-08-07']
         })
 
-# Google Sheet info
-SHEET_ID = "1NOOKyz9iUzwcsV0EcNJdVNQgQVL9bu3qsn_9wg7e1lE"
-SHEET_NAME = "Tasks"
+# --- Main app interface ---
+st.title("📋 Project Tasks Dashboard")
 
-# Construct CSV export URL
-CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME}"
+tasks_df = load_live_tasks()
 
-# Load sheet as DataFrame
-df = pd.read_csv(CSV_URL)
+if not tasks_df.empty:
+    st.success("Live tasks loaded successfully!")
+    st.dataframe(tasks_df.head())  # Show first few rows
 
-# Display the first few rows
-print(df.head())
+    # Optional: select an executor
+    executor_options = tasks_df['Executor'].unique() if 'Executor' in tasks_df.columns else []
+    selected_executor = st.selectbox("Filter by Executor", options=executor_options)
+
+    filtered_df = tasks_df[tasks_df['Executor'] == selected_executor]
+    st.write(f"### Tasks for {selected_executor}")
+    st.dataframe(filtered_df)
+else:
+    st.warning("No data available.")
 
 # Sidebar
 st.sidebar.title("🔧 System Controls")
