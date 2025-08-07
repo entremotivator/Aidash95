@@ -406,31 +406,39 @@ with tab2:
         st.markdown(f"""
         <div class="task-card {priority_class} {status_class}" style="border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-bottom: 15px; background-color: #f9f9f9;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h4 style="margin: 0; color: #1976d2;">🆔 {task.get('Task ID', 'N/A')} - {task.get('Task Description', 'No description')}</h4>
+                <h4 style="margin: 0; color: #1976d2;">🆔 {task['Task ID']} - {task['Task Description']}</h4>
                 <span style="background: #e3f2fd; padding: 5px 10px; border-radius: 15px; font-size: 12px; color: #1976d2;">
-                    {task.get('Priority', 'N/A')}
+                    {task['Priority']}
                 </span>
             </div>
             <p style="margin: 10px 0; color: #666;">
-                <strong>👤 Executor:</strong> {task.get('Executor', 'N/A')} | 
-                <strong>🏢 Company:</strong> {task.get('Company', 'N/A')} | 
-                <strong>📅 Date:</strong> {task.get('Date', 'N/A')}
+                <strong>👤 Executor:</strong> {task['Executor']} | 
+                <strong>🏢 Company:</strong> {task['Company']} | 
+                <strong>📅 Date:</strong> {task['Date']}
             </p>
             <p style="margin: 10px 0; color: #666;">
-                <strong>📍 Section:</strong> {task.get('Section', 'N/A')} | 
-                <strong>🎯 Object:</strong> {task.get('Object', 'N/A')} | 
-                <strong>📊 Status:</strong> {task.get('Status', 'N/A')}
+                <strong>📍 Section:</strong> {task['Section']} | 
+                <strong>🎯 Object:</strong> {task['Object']} | 
+                <strong>📊 Status:</strong> {task['Status']}
             </p>
             <p style="margin: 10px 0; color: #666;">
-                <strong>⏰ Reminder:</strong> {task.get('Reminder Time', 'N/A')} | 
-                <strong>📧 Sent:</strong> {task.get('Reminder Sent', 'N/A')} | 
-                <strong>👁️ Read:</strong> {task.get('Reminder Read', 'N/A')}
+                <strong>⏰ Reminder:</strong> {task['Reminder Time']} | 
+                <strong>📧 Sent:</strong> {task['Reminder Sent']} | 
+                <strong>👁️ Read:</strong> {task['Reminder Read']}
             </p>
             <p style="margin: 10px 0; color: #666;">
-                <strong>💬 Comment:</strong> {task.get('Comment', 'No comment')}
+                <strong>💬 Comment:</strong> {task['Comment']}
             </p>
         </div>
         """, unsafe_allow_html=True)
+
+else:
+    # Display as table
+    st.dataframe(
+        filtered_df,
+        use_container_width=True,
+        height=600
+    )
 
 else:
     # Display as table
