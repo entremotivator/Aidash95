@@ -134,21 +134,22 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- Google Sheets integration ---
+# Google Sheets integration
 SHEET_ID = "1NOOKyz9iUzwcsV0EcNJdVNQgQVL9bu3qsn_9wg7e1lE"
 SHEET_NAME = "Tasks"  # The sheet tab name
-CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME}"
+CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gsheet?tqx=out:csv&sheet={SHEET_NAME}"
 
-@st.cache_data(ttl=60)  # Cache data for 1 minute
+@st.cache_data(ttl=60)  # Cache for 1 minute
 def load_live_tasks():
     """Load tasks from Google Sheets live link"""
     try:
         df = pd.read_csv(CSV_URL)
-        df.columns = df.columns.str.strip()  # Clean column names
+        # Clean column names
+        df.columns = df.columns.str.strip()
         return df
     except Exception as e:
         st.error(f"Error loading live data: {str(e)}")
-        # Fallback sample data
+        # Fallback to sample data
         return pd.DataFrame({
             'Task ID': ['ID1', 'ID2', 'ID3'],
             'Executor': ['John Doe', 'Jane Smith', 'Bob Wilson'],
@@ -171,24 +172,8 @@ def load_live_tasks():
             'Report Date': ['2025-08-05', '', '2025-08-07']
         })
 
-# --- Main app interface ---
-st.title("📋 Project Tasks Dashboard")
-
+# Load data
 tasks_df = load_live_tasks()
-
-if not tasks_df.empty:
-    st.success("Live tasks loaded successfully!")
-    st.dataframe(tasks_df.head())  # Show first few rows
-
-    # Optional: select an executor
-    executor_options = tasks_df['Executor'].unique() if 'Executor' in tasks_df.columns else []
-    selected_executor = st.selectbox("Filter by Executor", options=executor_options)
-
-    filtered_df = tasks_df[tasks_df['Executor'] == selected_executor]
-    st.write(f"### Tasks for {selected_executor}")
-    st.dataframe(filtered_df)
-else:
-    st.warning("No data available.")
 
 # Sidebar
 st.sidebar.title("🔧 System Controls")
@@ -393,60 +378,48 @@ with tab2:
     view_mode = st.radio("View Mode", ["Cards", "Table"], horizontal=True)
     
     if view_mode == "Cards":
-    # Display tasks as cards
-    for idx, task in filtered_df.iterrows():
-        # Safely access priority and status
-        priority_value = task['Priority'] if 'Priority' in task and pd.notna(task['Priority']) else 'medium'
-        priority_class = f"priority-{priority_value.lower()}"
-
-        status_value = task['Status'] if 'Status' in task and pd.notna(task['Status']) else 'todo'
-        status_class = f"status-{status_value.lower().replace(' ', '')}"
-
-        # Render card
-        st.markdown(f"""
-        <div class="task-card {priority_class} {status_class}" style="border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-bottom: 15px; background-color: #f9f9f9;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h4 style="margin: 0; color: #1976d2;">🆔 {task['Task ID']} - {task['Task Description']}</h4>
-                <span style="background: #e3f2fd; padding: 5px 10px; border-radius: 15px; font-size: 12px; color: #1976d2;">
-                    {task['Priority']}
-                </span>
+        # Display tasks as cards
+        for idx, task in filtered_df.iterrows():
+            priority_class = f"priority-{task.get('Priority', 'medium').lower()}"
+            status_class = f"status-{task.get('Status', 'todo').lower().replace(' ', '')}"
+            
+            st.markdown(f"""
+            <div class="task-card {priority_class} {status_class}">
+                <div style="display: flex; justify-content: between; align-items: center;">
+                    <h4 style="margin: 0; color: #1976d2;">🆔 {task.get('Task ID', 'N/A')} - {task.get('Task Description', 'No description')}</h4>
+                    <span style="background: #e3f2fd; padding: 5px 10px; border-radius: 15px; font-size: 12px; color: #1976d2;">
+                        {task.get('Priority', 'N/A')}
+                    </span>
+                </div>
+                <p style="margin: 10px 0; color: #666;">
+                    <strong>👤 Executor:</strong> {task.get('Executor', 'N/A')} | 
+                    <strong>🏢 Company:</strong> {task.get('Company', 'N/A')} | 
+                    <strong>📅 Date:</strong> {task.get('Date', 'N/A')}
+                </p>
+                <p style="margin: 10px 0; color: #666;">
+                    <strong>📍 Section:</strong> {task.get('Section', 'N/A')} | 
+                    <strong>🎯 Object:</strong> {task.get('Object', 'N/A')} | 
+                    <strong>📊 Status:</strong> {task.get('Status', 'N/A')}
+                </p>
+                <p style="margin: 10px 0; color: #666;">
+                    <strong>⏰ Reminder:</strong> {task.get('Reminder Time', 'N/A')} | 
+                    <strong>📧 Sent:</strong> {task.get('Reminder Sent', 'N/A')} | 
+                    <strong>👁️ Read:</strong> {task.get('Reminder Read', 'N/A')}
+                </p>
+                <p style="margin: 10px 0; color: #666;">
+                    <strong>💬 Comment:</strong> {task.get('Comment', 'No comment')}
+                </p>
             </div>
-            <p style="margin: 10px 0; color: #666;">
-                <strong>👤 Executor:</strong> {task['Executor']} | 
-                <strong>🏢 Company:</strong> {task['Company']} | 
-                <strong>📅 Date:</strong> {task['Date']}
-            </p>
-            <p style="margin: 10px 0; color: #666;">
-                <strong>📍 Section:</strong> {task['Section']} | 
-                <strong>🎯 Object:</strong> {task['Object']} | 
-                <strong>📊 Status:</strong> {task['Status']}
-            </p>
-            <p style="margin: 10px 0; color: #666;">
-                <strong>⏰ Reminder:</strong> {task['Reminder Time']} | 
-                <strong>📧 Sent:</strong> {task['Reminder Sent']} | 
-                <strong>👁️ Read:</strong> {task['Reminder Read']}
-            </p>
-            <p style="margin: 10px 0; color: #666;">
-                <strong>💬 Comment:</strong> {task['Comment']}
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
+    
+    else:
+        # Display as table
+        st.dataframe(
+            filtered_df,
+            use_container_width=True,
+            height=600
+        )
 
-else:
-    # Display as table
-    st.dataframe(
-        filtered_df,
-        use_container_width=True,
-        height=600
-    )
-
-else:
-    # Display as table
-    st.dataframe(
-        filtered_df,
-        use_container_width=True,
-        height=600
-    )
 with tab3:
     st.header("📊 Analytics & Insights")
     
