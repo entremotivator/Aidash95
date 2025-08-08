@@ -378,10 +378,13 @@ with tab2:
     view_mode = st.radio("View Mode", ["Cards", "Table"], horizontal=True)
     
     if view_mode == "Cards":
-        # Display tasks as cards
-        for idx, task in filtered_df.iterrows():
-            priority_class = f"priority-{task.get('Priority', 'medium').lower()}"
-            status_class = f"status-{task.get('Status', 'todo').lower().replace(' ', '')}"
+    # Display tasks as cards
+    for idx, task in filtered_df.iterrows():
+        priority = str(task['Priority']) if 'Priority' in task and pd.notna(task['Priority']) else 'medium'
+        status = str(task['Status']) if 'Status' in task and pd.notna(task['Status']) else 'todo'
+
+        priority_class = f"priority-{priority.lower()}"
+        status_class = f"status-{status.lower().replace(' ', '')}"
             
             st.markdown(f"""
             <div class="task-card {priority_class} {status_class}">
