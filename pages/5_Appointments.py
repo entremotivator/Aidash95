@@ -7,6 +7,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import numpy as np
+import time
 
 # ---------- Configuration ----------
 STATIC_SHEET_URL = "https://docs.google.com/spreadsheets/d/1mgToY7I10uwPrdPnjAO9gosgoaEKJCf7nv-E0-1UfVQ/edit"
@@ -22,19 +23,197 @@ SHEET_COLUMNS = [
 
 # ---------- Streamlit Page Settings ----------
 st.set_page_config(
-    page_title="🚀 Event Management CRM",
+    page_title="🚀 Live Appointments Dashboard",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# ---------- Session State Initialization (GLOBAL) ----------
+# ---------- Enhanced CSS Styling ----------
+st.markdown("""
+<style>
+    /* Main container styling */
+    .main-header {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        color: white;
+        text-align: center;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    /* Appointment cards */
+    .appointment-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-left: 5px solid #667eea;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .appointment-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    
+    /* Status badges with better styling */
+    .status-badge {
+        padding: 0.4rem 1rem;
+        border-radius: 25px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-block;
+        margin: 0.2rem;
+    }
+    
+    .status-confirmed { 
+        background: linear-gradient(45deg, #28a745, #20c997);
+        color: white;
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    }
+    
+    .status-pending { 
+        background: linear-gradient(45deg, #ffc107, #fd7e14);
+        color: #212529;
+        box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+    }
+    
+    .status-cancelled { 
+        background: linear-gradient(45deg, #dc3545, #e83e8c);
+        color: white;
+        box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+    }
+    
+    .status-completed { 
+        background: linear-gradient(45deg, #6c757d, #495057);
+        color: white;
+        box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+    }
+    
+    /* Time display */
+    .time-display {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        padding: 1rem;
+        border-radius: 10px;
+        text-align: center;
+        margin: 0.5rem 0;
+        border: 2px solid #dee2e6;
+    }
+    
+    .time-large {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #495057;
+    }
+    
+    /* Metric cards */
+    .metric-card {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        padding: 1.5rem;
+        border-radius: 15px;
+        color: white;
+        text-align: center;
+        margin: 0.5rem 0;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .metric-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    /* Live indicator */
+    .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        background: #28a745;
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-left: 1rem;
+    }
+    
+    .live-dot {
+        width: 8px;
+        height: 8px;
+        background: white;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+    
+    /* Search and filter styling */
+    .filter-container {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin: 1rem 0;
+        border: 1px solid #dee2e6;
+    }
+    
+    /* Upcoming appointments highlight */
+    .upcoming-appointment {
+        border-left-color: #ffc107 !important;
+        background: linear-gradient(135deg, #fff3cd, #ffffff);
+    }
+    
+    .current-appointment {
+        border-left-color: #28a745 !important;
+        background: linear-gradient(135deg, #d4edda, #ffffff);
+        animation: glow 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes glow {
+        from { box-shadow: 0 2px 10px rgba(40, 167, 69, 0.2); }
+        to { box-shadow: 0 4px 20px rgba(40, 167, 69, 0.4); }
+    }
+    
+    /* Host avatar */
+    .host-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        margin-right: 0.5rem;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ---------- Session State Initialization ----------
 def initialize_session_state():
     defaults = {
         "connection_status": "sample",
         "events_data": create_sample_data() if 'events_data' not in st.session_state else st.session_state.events_data,
         "error_message": None,
         "client": None,
-        "spreadsheet": None
+        "spreadsheet": None,
+        "auto_refresh": False,
+        "last_refresh": datetime.now()
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -42,38 +221,48 @@ def initialize_session_state():
 
 initialize_session_state()
 
-# ---------- Custom CSS and Title ----------
-st.markdown("""
-<style>
-    .metric-card { background: linear-gradient(90deg, #667eea, #764ba2); padding:1rem; border-radius:10px; color:white; text-align:center; margin:0.5rem 0; }
-    .status-badge { padding:0.25rem 0.75rem; border-radius:20px; font-size:0.8rem; font-weight:bold; }
-    .confirmed { background-color:#28a745; color:white; } .pending { background-color:#ffc107; color:black; }
-    .cancelled { background-color:#dc3545; color:white; } .completed { background-color:#6c757d; color:white; }
-    .success-box { padding:1rem; background-color:#d4edda; border:1px solid #c3e6cb; border-radius:0.375rem; color:#155724; margin:1rem 0; }
-    .warning-box { padding:1rem; background-color:#fff3cd; border:1px solid #ffeaa7; border-radius:0.375rem; color:#856404; margin:1rem 0; }
-</style>
-""", unsafe_allow_html=True)
-st.title("🚀 Event Management CRM")
+# ---------- Helper Functions ----------
+def create_sample_data():
+    now = datetime.now()
+    return pd.DataFrame({
+        'Name': ['John Doe', 'Jane Smith', 'Bob Johnson', 'Alice Brown', 'Charlie Wilson', 'Diana Prince'],
+        'Email': ['john@example.com', 'jane@example.com', 'bob@example.com', 'alice@example.com', 'charlie@example.com', 'diana@example.com'],
+        'Guest Email': ['guest1@example.com', 'guest2@example.com', '', 'guest4@example.com', '', 'guest6@example.com'],
+        'Status': ['Confirmed', 'Pending', 'Cancelled', 'Completed', 'Confirmed', 'Pending'],
+        'Event ID': ['EVT001', 'EVT002', 'EVT003', 'EVT004', 'EVT005', 'EVT006'],
+        'Start Time (12hr)': ['10:00 AM', '2:00 PM', '11:00 AM', '3:00 PM', '9:00 AM', '4:00 PM'],
+        'Start Time (24hr)': ['10:00', '14:00', '11:00', '15:00', '09:00', '16:00'],
+        'Meet Link': ['https://meet.google.com/abc-defg-hij'] * 6,
+        'Description': ['Team Standup Meeting', 'Client Presentation', 'Code Review Session', 'Training Workshop', 'Project Planning', 'Performance Review'],
+        'Host': ['John', 'Jane', 'Bob', 'Alice', 'Charlie', 'Diana'],
+        'Unique Code': ['UC001', 'UC002', 'UC003', 'UC004', 'UC005', 'UC006'],
+        'Upload_Timestamp': [
+            (now - timedelta(hours=2)).strftime('%Y-%m-%d %H:%M:%S'),
+            (now - timedelta(hours=1)).strftime('%Y-%m-%d %H:%M:%S'),
+            (now - timedelta(minutes=30)).strftime('%Y-%m-%d %H:%M:%S'),
+            (now - timedelta(minutes=15)).strftime('%Y-%m-%d %H:%M:%S'),
+            (now - timedelta(minutes=5)).strftime('%Y-%m-%d %H:%M:%S'),
+            now.strftime('%Y-%m-%d %H:%M:%S')
+        ]
+    })
 
-# ---------- Check Global Credentials ----------
-if not st.session_state.get("global_gsheets_creds"):
-    st.error("🔑 Google Sheets credentials not found. Please upload your service account JSON in the sidebar.")
-    st.info("💡 Use the sidebar to upload your service account JSON file. It will be used across all pages.")
-    st.stop()
-
-# ---------- Data Load Function ----------
 def load_data_from_sheets(sheet_url):
+    if not st.session_state.get("global_gsheets_creds"):
+        return None, None, "No global credentials found"
+    
     creds = st.session_state.global_gsheets_creds
     try:
         creds_obj = ServiceAccountCredentials.from_json_keyfile_dict(creds, SHEET_SCOPE)
         client = gspread.authorize(creds_obj)
     except Exception as e:
         return None, None, f"Authentication failed: {e}"
+    
     try:
         sheet_id = sheet_url.split('/d/')[1].split('/')[0]
         spreadsheet = client.open_by_key(sheet_id)
     except Exception as e:
         return None, None, f"Spreadsheet access failed: {e}"
+    
     try:
         worksheet = spreadsheet.get_worksheet(0)
         data = worksheet.get_all_records()
@@ -82,212 +271,257 @@ def load_data_from_sheets(sheet_url):
     except Exception as e:
         return None, None, f"Error reading sheet: {e}"
 
-# ---------- Helper Functions ----------
-def create_sample_data():
-    return pd.DataFrame({
-        'Name': ['John Doe', 'Jane Smith', 'Bob Johnson', 'Alice Brown'],
-        'Email': ['john@e.com', 'jane@e.com', 'bob@e.com', 'alice@e.com'],
-        'Guest Email': ['g1@e.com', 'g2@e.com', '', 'g4@e.com'],
-        'Status': ['Confirmed','Pending','Cancelled','Completed'],
-        'Event ID': ['EVT001','EVT002','EVT003','EVT004'],
-        'Start Time (12hr)': ['10:00 AM','2:00 PM','11:00 AM','3:00 PM'],
-        'Start Time (24hr)': ['10:00','14:00','11:00','15:00'],
-        'Meet Link': ['https://meet...',]*4,
-        'Description': ['Standup','Presentation','Review','Training'],
-        'Host': ['John','Jane','Bob','Alice'],
-        'Unique Code': ['UC001','UC002','UC003','UC004'],
-        'Upload_Timestamp': ['2024‑01‑15 09:00:00','2024‑01‑16 13:00:00','2024‑01‑17 10:00:00','2024‑01‑18 14:00:00']
-    })
-
 def refresh_data():
-    if st.session_state.spreadsheet:
-        df, _, err = load_data_from_sheets(STATIC_SHEET_URL)
+    if st.session_state.get("global_gsheets_creds"):
+        df, connection_info, err = load_data_from_sheets(STATIC_SHEET_URL)
         if err:
-            st.error(err)
             st.session_state.connection_status = "error"
             st.session_state.error_message = err
         else:
             st.session_state.events_data = df
-            st.session_state.client, st.session_state.spreadsheet = _ , _
+            if connection_info:
+                st.session_state.client, st.session_state.spreadsheet = connection_info
             st.session_state.connection_status = "connected"
             st.session_state.error_message = None
+            st.session_state.last_refresh = datetime.now()
 
-def append_to_sheet(data_dict):
-    if not st.session_state.spreadsheet:
-        return False, "No spreadsheet connection"
-    worksheet = st.session_state.spreadsheet.get_worksheet(0)
-    row = [data_dict.get(c, '') for c in SHEET_COLUMNS]
+def get_appointment_time_status(start_time_24hr):
+    """Determine if appointment is upcoming, current, or past"""
     try:
-        worksheet.append_row(row)
-        refresh_data()
-        return True, "Data added successfully!"
-    except Exception as e:
-        return False, str(e)
+        now = datetime.now()
+        current_time = now.strftime('%H:%M')
+        
+        # Simple time comparison (assumes same day)
+        if start_time_24hr == current_time:
+            return "current"
+        elif start_time_24hr > current_time:
+            return "upcoming"
+        else:
+            return "past"
+    except:
+        return "unknown"
 
-# ---------- Sidebar & Navigation ----------
-def sidebar_navigation():
-    st.sidebar.header("🔐 Authentication")
-    st.sidebar.success("✅ Using Global Credentials")
-    email = st.session_state.global_gsheets_creds.get('client_email', 'Unknown')
-    st.sidebar.info(email)
-    st.sidebar.markdown("---")
-    page = st.sidebar.selectbox("Choose Page", [
-        "📋 Dashboard","📅 Events","👥 Contacts","📈 Analytics","➕ Add Event","⚙️ Settings"
-    ])
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("✅ **Data Source**")
-    if st.session_state.connection_status == "connected":
-        st.sidebar.success("🔗 Google Sheets")
-    elif st.session_state.connection_status == "error":
-        st.sidebar.error("❌ Connection Error")
-    else:
-        st.sidebar.info("💻 Sample Data")
-    return page
-
-# ---------- Page Functions ----------
-def show_dashboard():
-    st.header("📋 Dashboard")
-    df = st.session_state.events_data
-    c1,c2,c3,c4 = st.columns(4)
-    c1.metric("Total Events", len(df))
-    c2.metric("Confirmed", len(df[df['Status']=='Confirmed'])) if 'Status' in df else None
-    c3.metric("Pending", len(df[df['Status']=='Pending'])) if 'Status' in df else None
-    c4.metric("Unique Hosts", df['Host'].nunique() if 'Host' in df else 0)
-    if st.session_state.connection_status == "connected":
-        if st.button("🔄 Refresh"):
-            refresh_data()
-            st.experimental_rerun()
-    st.subheader("Recent Events")
-    st.dataframe(df.head(10)[['Name','Email','Status','Start Time (12hr)','Host','Event ID']])
+def render_appointment_card(row, index):
+    """Render a beautiful appointment card"""
+    time_status = get_appointment_time_status(row.get('Start Time (24hr)', ''))
     
-def show_events():
-    st.header("📅 Events")
-    df = st.session_state.events_data.copy()
-    if df.empty:
-        st.info("No events")
-        return
-    status_opts = ['All'] + df['Status'].unique().tolist() if 'Status' in df else ['All']
-    host_opts = ['All'] + df['Host'].unique().tolist() if 'Host' in df else ['All']
-    status = st.selectbox("Status", status_opts)
-    host = st.selectbox("Host", host_opts)
-    term = st.text_input("Search")
-    if status!='All':
-        df = df[df['Status']==status]
-    if host!='All':
-        df = df[df['Host']==host]
-    if term:
-        mask = df.apply(lambda r: term.lower() in str(r[['Name','Email','Event ID','Description']].values).lower(), axis=1)
-        df = df[mask]
-    st.subheader(f"Found: {len(df)}")
-    for _, r in df.iterrows():
-        with st.expander(f"{r['Name']} — {r['Event ID']} ({r['Status']})"):
-            cols = st.columns(2)
-            for key in ['Name','Email','Guest Email','Status','Event ID','Host']:
-                cols[0].write(f"**{key}:** {r.get(key,'')}")
-            for key in ['Start Time (12hr)','Start Time (24hr)','Unique Code','Upload_Timestamp']:
-                cols[1].write(f"**{key}:** {r.get(key,'')}")
-            if r.get('Meet Link'):
-                cols[1].write(f"**Meet Link:** [link]({r.get('Meet Link')})")
-            if r.get('Description'):
-                st.write(f"**Description:** {r.get('Description')}")
-
-def show_contacts():
-    st.header("👥 Contacts")
-    df = st.session_state.events_data
-    rows = []
-    for _, r in df.iterrows():
-        rows.append({'Name':r['Name'],'Email':r['Email'],'Type':'Primary'})
-        if r.get('Guest Email'):
-            rows.append({'Name':'Guest','Email':r['Guest Email'],'Type':'Guest'})
-    cdf = pd.DataFrame(rows).groupby(['Name','Email','Type']).size().reset_index(name='Events')
-    st.dataframe(cdf)
-    st.subheader("All Entries")
-    for _, r in df.iterrows():
-        with st.expander(f"{r['Name']} ({r['Email']})"):
-            cols = st.columns(2)
-            cols[0].write(f"**Guest Email:** {r.get('Guest Email','')}")
-            cols[1].write(f"**Status:** {r.get('Status','')}\n**Event ID:** {r.get('Event ID','')}")
-
-def show_analytics():
-    st.header("📈 Analytics")
-    df = st.session_state.events_data
-    if df.empty:
-        st.info("No data")
-        return
-    c1,c2 = st.columns(2)
-    if 'Status' in df:
-        fig1 = px.pie(df, names='Status', title="Status Distribution")
-        c1.plotly_chart(fig1, use_container_width=True)
-    if 'Host' in df:
-        fig2 = px.bar(df['Host'].value_counts().reset_index(), x='index', y='Host', orientation='h', title="Top Hosts")
-        c2.plotly_chart(fig2, use_container_width=True)
-    if 'Upload_Timestamp' in df:
-        df['Upload_Date']=pd.to_datetime(df['Upload_Timestamp'], errors='coerce').dt.date
-        timeline = df['Upload_Date'].value_counts().sort_index()
-        if not timeline.empty:
-            fig3 = px.line(x=timeline.index, y=timeline.values, title="Uploads Over Time")
-            st.plotly_chart(fig3, use_container_width=True)
-    c3,c4,c5 = st.columns(3)
-    c3.metric("Total Events", len(df))
-    c4.metric("Unique Hosts", df['Host'].nunique() if 'Host' in df else 0)
-    c5.metric("Unique Emails", df['Email'].nunique() if 'Email' in df else 0)
-
-def show_add_event():
-    st.header("➕ Add Event")
-    with st.form("form"):
-        c1,c2 = st.columns(2)
-        name = c1.text_input("Name*"); email = c1.text_input("Email*"); guest = c1.text_input("Guest Email")
-        status = c1.selectbox("Status", ["Confirmed","Pending","Cancelled","Completed"])
-        event_id = c1.text_input("Event ID*"); code = c1.text_input("Unique Code*")
-        time12 = c2.text_input("Start Time (12hr)*"); time24 = c2.text_input("Start Time (24hr)*")
-        meet = c2.text_input("Meet Link"); host = c2.text_input("Host*"); desc = c2.text_area("Description")
-        ok = st.form_submit_button("Add")
-        if ok:
-            if all([name,email,event_id,time12,time24,host,code]):
-                new = {'Name':name,'Email':email,'Guest Email':guest,'Status':status,
-                       'Event ID':event_id,'Start Time (12hr)':time12,'Start Time (24hr)':time24,
-                       'Meet Link':meet,'Description':desc,'Host':host,'Unique Code':code,
-                       'Upload_Timestamp':datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-                if st.session_state.connection_status=="connected":
-                    ok2,msg = append_to_sheet(new)
-                    st.success(msg) if ok2 else st.error(msg)
-                else:
-                    st.warning("Sample only, appended locally")
-                    st.session_state.events_data = pd.concat([st.session_state.events_data, pd.DataFrame([new])], ignore_index=True)
-                    st.success("Added locally")
-                st.experimental_rerun()
-            else:
-                st.error("Fill all * required")
-
-def show_settings():
-    st.header("⚙️ Settings")
-    st.subheader("Expected Columns")
-    for i,c in enumerate(SHEET_COLUMNS,1): st.write(f"{i}. {c}")
-    st.subheader("Sheet URL")
-    st.code(STATIC_SHEET_URL)
-    st.subheader("Data Info")
-    st.info(f"Source: {st.session_state.connection_status}")
-    st.write(f"Records: {len(st.session_state.events_data)}")
-    st.subheader("Columns Present")
-    st.write(list(st.session_state.events_data.columns))
-    st.subheader("Data Preview")
-    st.dataframe(st.session_state.events_data.head(), use_container_width=True)
+    # Determine card class based on time status
+    card_class = "appointment-card"
+    if time_status == "current":
+        card_class += " current-appointment"
+    elif time_status == "upcoming":
+        card_class += " upcoming-appointment"
+    
+    # Status badge class
+    status = row.get('Status', '').lower()
+    status_class = f"status-badge status-{status}"
+    
+    # Host initials for avatar
+    host_name = row.get('Host', 'Unknown')
+    host_initials = ''.join([name[0].upper() for name in host_name.split()[:2]])
+    
+    st.markdown(f"""
+    <div class="{card_class}">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center;">
+                <div class="host-avatar">{host_initials}</div>
+                <div>
+                    <h3 style="margin: 0; color: #2c3e50; font-size: 1.2rem;">{row.get('Name', 'N/A')}</h3>
+                    <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">{row.get('Email', 'N/A')}</p>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <span class="{status_class}">{row.get('Status', 'N/A')}</span>
+                <br>
+                <small style="color: #7f8c8d;">ID: {row.get('Event ID', 'N/A')}</small>
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div class="time-display">
+                <div class="time-large">{row.get('Start Time (12hr)', 'N/A')}</div>
+                <small style="color: #6c757d;">Start Time</small>
+            </div>
+            <div style="padding: 1rem; background: #f8f9fa; border-radius: 10px;">
+                <strong style="color: #495057;">Host:</strong> {row.get('Host', 'N/A')}<br>
+                <strong style="color: #495057;">Code:</strong> {row.get('Unique Code', 'N/A')}
+            </div>
+        </div>
+        
+        {f'<div style="margin-bottom: 1rem;"><strong>Description:</strong> {row.get("Description", "No description")}</div>' if row.get('Description') else ''}
+        
+        {f'<div style="margin-bottom: 1rem;"><strong>Guest:</strong> {row.get("Guest Email", "No guest")}</div>' if row.get('Guest Email') else ''}
+        
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <small style="color: #7f8c8d;">Updated: {row.get('Upload_Timestamp', 'N/A')}</small>
+            {f'<a href="{row.get("Meet Link", "#")}" target="_blank" style="background: #007bff; color: white; padding: 0.5rem 1rem; border-radius: 5px; text-decoration: none; font-size: 0.9rem;">Join Meeting</a>' if row.get('Meet Link') else ''}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ---------- Main Application ----------
 def main():
-    page = sidebar_navigation()
-    if st.session_state.connection_status!="connected":
-        refresh_data()
-    if st.session_state.error_message and st.session_state.connection_status=="error":
-        st.error("Google Sheets Connection Failed")
-        st.expander("Error Details", expanded=True).write(st.session_state.error_message)
+    # Header
+    st.markdown("""
+    <div class="main-header">
+        <h1 style="margin: 0; font-size: 2.5rem;">🚀 Live Appointments Dashboard</h1>
+        <p style="margin: 0.5rem 0 0 0; font-size: 1.1rem; opacity: 0.9;">Real-time appointment management and monitoring</p>
+        <span class="live-indicator">
+            <span class="live-dot"></span>
+            LIVE
+        </span>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Check for global credentials
+    if not st.session_state.get("global_gsheets_creds"):
+        st.error("🔑 Google Sheets credentials not found. Please upload your service account JSON in the sidebar.")
+        st.info("💡 Use the sidebar to upload your service account JSON file. It will be used across all pages.")
         st.stop()
-    if page=="📋 Dashboard": show_dashboard()
-    elif page=="📅 Events": show_events()
-    elif page=="👥 Contacts": show_contacts()
-    elif page=="📈 Analytics": show_analytics()
-    elif page=="➕ Add Event": show_add_event()
-    elif page=="⚙️ Settings": show_settings()
+    
+    # Sidebar controls
+    with st.sidebar:
+        st.header("🔧 Controls")
+        
+        # Auto-refresh toggle
+        auto_refresh = st.checkbox("Auto Refresh (30s)", value=st.session_state.auto_refresh)
+        st.session_state.auto_refresh = auto_refresh
+        
+        # Manual refresh button
+        if st.button("🔄 Refresh Now", use_container_width=True):
+            refresh_data()
+            st.rerun()
+        
+        # Connection status
+        st.markdown("---")
+        st.subheader("📡 Connection Status")
+        if st.session_state.connection_status == "connected":
+            st.success("✅ Connected to Google Sheets")
+        elif st.session_state.connection_status == "error":
+            st.error("❌ Connection Error")
+        else:
+            st.info("💻 Using Sample Data")
+        
+        # Last refresh time
+        if st.session_state.last_refresh:
+            st.caption(f"Last updated: {st.session_state.last_refresh.strftime('%H:%M:%S')}")
+    
+    # Auto-refresh logic
+    if st.session_state.auto_refresh:
+        time.sleep(30)
+        refresh_data()
+        st.rerun()
+    
+    # Load data if needed
+    if st.session_state.connection_status != "connected" and st.session_state.get("global_gsheets_creds"):
+        refresh_data()
+    
+    # Error handling
+    if st.session_state.error_message and st.session_state.connection_status == "error":
+        st.error("❌ Google Sheets Connection Failed")
+        with st.expander("Error Details", expanded=True):
+            st.write(st.session_state.error_message)
+        st.stop()
+    
+    # Get data
+    df = st.session_state.events_data.copy()
+    
+    # Metrics row
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-value">{len(df)}</div>
+            <div class="metric-label">Total Appointments</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        confirmed_count = len(df[df['Status'] == 'Confirmed']) if 'Status' in df.columns else 0
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-value">{confirmed_count}</div>
+            <div class="metric-label">Confirmed</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        pending_count = len(df[df['Status'] == 'Pending']) if 'Status' in df.columns else 0
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-value">{pending_count}</div>
+            <div class="metric-label">Pending</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        unique_hosts = df['Host'].nunique() if 'Host' in df.columns else 0
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-value">{unique_hosts}</div>
+            <div class="metric-label">Active Hosts</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Filters
+    st.markdown('<div class="filter-container">', unsafe_allow_html=True)
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        status_options = ['All'] + sorted(df['Status'].unique().tolist()) if 'Status' in df.columns else ['All']
+        selected_status = st.selectbox("📊 Filter by Status", status_options)
+    
+    with col2:
+        host_options = ['All'] + sorted(df['Host'].unique().tolist()) if 'Host' in df.columns else ['All']
+        selected_host = st.selectbox("👤 Filter by Host", host_options)
+    
+    with col3:
+        search_term = st.text_input("🔍 Search appointments", placeholder="Search by name, email, or description...")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Apply filters
+    filtered_df = df.copy()
+    
+    if selected_status != 'All':
+        filtered_df = filtered_df[filtered_df['Status'] == selected_status]
+    
+    if selected_host != 'All':
+        filtered_df = filtered_df[filtered_df['Host'] == selected_host]
+    
+    if search_term:
+        search_columns = ['Name', 'Email', 'Description', 'Event ID']
+        mask = filtered_df[search_columns].astype(str).apply(
+            lambda x: x.str.contains(search_term, case=False, na=False)
+        ).any(axis=1)
+        filtered_df = filtered_df[mask]
+    
+    # Results header
+    st.markdown(f"""
+    <h2 style="color: #2c3e50; margin: 2rem 0 1rem 0;">
+        📅 Appointments ({len(filtered_df)} found)
+    </h2>
+    """, unsafe_allow_html=True)
+    
+    # Display appointments
+    if filtered_df.empty:
+        st.info("No appointments found matching your criteria.")
+    else:
+        # Sort by time for better organization
+        if 'Start Time (24hr)' in filtered_df.columns:
+            filtered_df = filtered_df.sort_values('Start Time (24hr)')
+        
+        for index, row in filtered_df.iterrows():
+            render_appointment_card(row, index)
+    
+    # Footer
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; color: #7f8c8d; padding: 1rem;">
+        <p>🚀 Live Appointments Dashboard | Real-time updates every 30 seconds</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
