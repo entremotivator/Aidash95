@@ -23,6 +23,12 @@ def main():
         st.info("💡 Use the sidebar to upload your service account JSON file for full functionality.")
         st.stop()
     
+    # Initialize default configuration if not present
+    initialize_default_config()
+    
+    # Auto-load data on app start
+    auto_load_pricing_data(sheets_manager)
+    
     # Main tabs
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "📊 Overview", "💰 Pricing List", "📈 Analytics", "➕ Add Service", "🔍 Data Scanner", "⚙️ Settings"
@@ -46,34 +52,118 @@ def main():
     with tab6:
         render_settings_tab(sheets_manager)
 
+def initialize_default_config():
+    """Initialize default configuration values"""
+    if 'pricing_sheet_url' not in st.session_state:
+        st.session_state.pricing_sheet_url = "1WeDpcSNnfCrtx4F3bBC9osigPkzy3LXybRO6jpN7BXE"
+    
+    if 'pricing_worksheet_name' not in st.session_state:
+        st.session_state.pricing_worksheet_name = ""
+    
+    if 'auto_load_enabled' not in st.session_state:
+        st.session_state.auto_load_enabled = True
+    
+    if 'last_auto_load' not in st.session_state:
+        st.session_state.last_auto_load = None
+
+def auto_load_pricing_data(sheets_manager):
+    """Automatically load pricing data if conditions are met"""
+    try:
+        # Check if auto-load is enabled
+        if not st.session_state.get('auto_load_enabled', True):
+            return
+        
+        # Check if data is already loaded and fresh (less than 5 minutes old)
+        if ('pricing_data' in st.session_state and 
+            st.session_state.pricing_data is not None and
+            'last_auto_load' in st.session_state and
+            st.session_state.last_auto_load):
+            
+            time_since_load = datetime.now() - st.session_state.last_auto_load
+            if time_since_load.total_seconds() < 300:  # 5 minutes
+                return
+        
+        # Get configuration
+        sheet_url = st.session_state.get('pricing_sheet_url', '')
+        worksheet_name = st.session_state.get('pricing_worksheet_name', '')
+        
+        if not sheet_url:
+            return
+        
+        # Show loading indicator
+        with st.spinner("🔄 Auto-loading pricing data..."):
+            df = sheets_manager.get_sheet_data(
+                sheet_id=sheet_url,
+                worksheet_name=worksheet_name if worksheet_name else None,
+                use_cache=True
+            )
+            
+            if df is not None and not df.empty:
+                st.session_state.pricing_data = df
+                st.session_state.last_auto_load = datetime.now()
+                
+                # Show success message briefly
+                success_placeholder = st.empty()
+                success_placeholder.success(f"✅ Auto-loaded {len(df):,} pricing records")
+                
+                # Clear success message after 3 seconds
+                import time
+                time.sleep(3)
+                success_placeholder.empty()
+            else:
+                # Show warning but don't stop the app
+                st.warning("⚠️ Auto-load: No data found or sheet is empty")
+                
+    except Exception as e:
+        # Show error but continue with app functionality
+        st.error(f"❌ Auto-load failed: {str(e)}")
+
 def render_overview_tab(sheets_manager):
     """Render pricing overview dashboard"""
     st.subheader("📊 Pricing Overview")
     
-    # Configuration section
-    with st.expander("⚙️ Configure Pricing Data Source", expanded=True):
+    # Configuration section - now shows current settings and allows changes
+    with st.expander("⚙️ Data Source Configuration", expanded=False):
+        st.info("💡 Data is automatically loaded. Modify settings below if needed.")
+        
         col1, col2 = st.columns([3, 1])
         
         with col1:
-            sheet_url = st.text_input(
+            new_sheet_url = st.text_input(
                 "Pricing Sheet URL/ID",
-                value="1WeDpcSNnfCrtx4F3bBC9osigPkzy3LXybRO6jpN7BXE",
+                value=st.session_state.get('pricing_sheet_url', ''),
                 help="Enter your pricing data Google Sheet URL or ID"
             )
             
-            worksheet_name = st.text_input(
+            new_worksheet_name = st.text_input(
                 "Worksheet Name (optional)",
+                value=st.session_state.get('pricing_worksheet_name', ''),
                 placeholder="Pricing",
                 help="Leave empty for first worksheet"
             )
         
         with col2:
-            if st.button("🔄 Load Data", type="primary", use_container_width=True):
-                load_pricing_data(sheets_manager, sheet_url, worksheet_name)
+            # Auto-load toggle
+            auto_load = st.checkbox(
+                "🔄 Auto-load enabled",
+                value=st.session_state.get('auto_load_enabled', True),
+                help="Automatically load data when app starts"
+            )
+            
+            if st.button("💾 Update Config", type="primary", use_container_width=True):
+                update_configuration(sheets_manager, new_sheet_url, new_worksheet_name, auto_load)
+            
+            if st.button("🔄 Reload Now", use_container_width=True):
+                force_reload_pricing_data(sheets_manager)
     
     # Display pricing data if loaded
     if 'pricing_data' in st.session_state and st.session_state.pricing_data is not None:
         df = st.session_state.pricing_data
+        
+        # Show last updated info
+        if 'last_auto_load' in st.session_state and st.session_state.last_auto_load:
+            last_update = st.session_state.last_auto_load.strftime("%Y-%m-%d %H:%M:%S")
+            st.caption(f"📅 Last updated: {last_update}")
         
         # Key metrics
         col1, col2, col3, col4 = st.columns(4)
@@ -86,8 +176,11 @@ def render_overview_tab(sheets_manager):
             price_cols = [col for col in df.columns if any(term in col.lower() for term in ['price', 'cost', 'rate', 'amount'])]
             if price_cols:
                 prices = pd.to_numeric(df[price_cols[0]], errors='coerce').dropna()
-                avg_price = prices.mean()
-                st.metric("💰 Avg Price", f"${avg_price:,.2f}")
+                if len(prices) > 0:
+                    avg_price = prices.mean()
+                    st.metric("💰 Avg Price", f"${avg_price:,.2f}")
+                else:
+                    st.metric("💰 Avg Price", "N/A")
             else:
                 st.metric("💰 Avg Price", "N/A")
         
@@ -164,27 +257,85 @@ def render_overview_tab(sheets_manager):
         with col3:
             if st.button("📄 Export PDF", use_container_width=True):
                 pdf_bytes = create_pricing_pdf(df)
-                st.download_button(
-                    "💾 Download PDF",
-                    pdf_bytes,
-                    f"pricing_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-                    "application/pdf"
-                )
+                if pdf_bytes:
+                    st.download_button(
+                        "💾 Download PDF",
+                        pdf_bytes,
+                        f"pricing_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                        "application/pdf"
+                    )
         
         with col4:
             if st.button("🔄 Refresh Data", use_container_width=True):
-                sheets_manager.clear_cache()
-                st.rerun()
+                force_reload_pricing_data(sheets_manager)
     
     else:
-        st.info("📋 Configure your pricing data source above to get started")
+        # Show loading or configuration message
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            st.info("📋 No pricing data loaded yet. Check your configuration above or wait for auto-load.")
+        
+        with col2:
+            if st.button("🔄 Try Load Now", type="primary", use_container_width=True):
+                force_reload_pricing_data(sheets_manager)
+
+def update_configuration(sheets_manager, sheet_url, worksheet_name, auto_load):
+    """Update configuration and optionally reload data"""
+    try:
+        # Update session state
+        st.session_state.pricing_sheet_url = sheet_url
+        st.session_state.pricing_worksheet_name = worksheet_name
+        st.session_state.auto_load_enabled = auto_load
+        
+        st.success("✅ Configuration updated!")
+        
+        # If auto-load is enabled, load data immediately
+        if auto_load and sheet_url:
+            force_reload_pricing_data(sheets_manager)
+        
+    except Exception as e:
+        st.error(f"❌ Error updating configuration: {str(e)}")
+
+def force_reload_pricing_data(sheets_manager):
+    """Force reload of pricing data"""
+    try:
+        sheet_url = st.session_state.get('pricing_sheet_url', '')
+        worksheet_name = st.session_state.get('pricing_worksheet_name', '')
+        
+        if not sheet_url:
+            st.error("❌ No sheet URL configured")
+            return
+        
+        with st.spinner("🔄 Reloading pricing data..."):
+            # Clear cache to force fresh data
+            sheets_manager.clear_cache()
+            
+            df = sheets_manager.get_sheet_data(
+                sheet_id=sheet_url,
+                worksheet_name=worksheet_name if worksheet_name else None,
+                use_cache=False
+            )
+            
+            if df is not None and not df.empty:
+                st.session_state.pricing_data = df
+                st.session_state.last_auto_load = datetime.now()
+                st.success(f"✅ Reloaded {len(df):,} pricing records")
+                st.rerun()
+            else:
+                st.error("❌ No data found or sheet is empty")
+                
+    except Exception as e:
+        st.error(f"❌ Error reloading data: {str(e)}")
 
 def render_pricing_list_tab(sheets_manager):
     """Render detailed pricing list with filtering and editing"""
     st.subheader("💰 Pricing Database")
     
     if 'pricing_data' not in st.session_state or st.session_state.pricing_data is None:
-        st.warning("⚠️ No pricing data loaded. Please configure data source in Overview tab.")
+        st.warning("⚠️ No pricing data loaded. Data should auto-load when credentials are configured.")
+        if st.button("🔄 Try Loading Data Now"):
+            force_reload_pricing_data(sheets_manager)
         return
     
     df = st.session_state.pricing_data
@@ -297,7 +448,9 @@ def render_analytics_tab(sheets_manager):
     st.subheader("📈 Pricing Analytics")
     
     if 'pricing_data' not in st.session_state or st.session_state.pricing_data is None:
-        st.warning("⚠️ No pricing data loaded. Please configure data source in Overview tab.")
+        st.warning("⚠️ No pricing data loaded. Data should auto-load when credentials are configured.")
+        if st.button("🔄 Try Loading Data Now"):
+            force_reload_pricing_data(sheets_manager)
         return
     
     df = st.session_state.pricing_data
@@ -425,7 +578,9 @@ def render_add_service_tab(sheets_manager):
     st.subheader("➕ Add New Service")
     
     if 'pricing_data' not in st.session_state or st.session_state.pricing_data is None:
-        st.warning("⚠️ No pricing data loaded. Please configure data source in Overview tab first.")
+        st.warning("⚠️ No pricing data loaded. Please wait for auto-load or configure data source in Overview tab first.")
+        if st.button("🔄 Try Loading Data Now"):
+            force_reload_pricing_data(sheets_manager)
         return
     
     df = st.session_state.pricing_data
@@ -493,9 +648,7 @@ def render_add_service_tab(sheets_manager):
                         sheets_manager.clear_cache()
                         
                         # Reload pricing data
-                        load_pricing_data(sheets_manager, sheet_url, worksheet_name)
-                        
-                        st.rerun()
+                        force_reload_pricing_data(sheets_manager)
                     else:
                         st.error("❌ Failed to add service to sheet")
                         
@@ -507,7 +660,7 @@ def render_data_scanner_tab():
     st.subheader("🔍 Advanced Pricing Data Analysis")
     
     if 'pricing_data' not in st.session_state or st.session_state.pricing_data is None:
-        st.warning("⚠️ No pricing data loaded. Please configure data source in Overview tab first.")
+        st.warning("⚠️ No pricing data loaded. Please wait for auto-load or configure data source in Overview tab first.")
         return
     
     # Set the current dataframe for the scanner
@@ -521,6 +674,32 @@ def render_settings_tab(sheets_manager):
     """Render settings and configuration"""
     st.subheader("⚙️ Settings & Configuration")
     
+    # Auto-load settings
+    st.subheader("🔄 Auto-Load Configuration")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        auto_load_enabled = st.checkbox(
+            "Enable automatic data loading",
+            value=st.session_state.get('auto_load_enabled', True),
+            help="Automatically load data when the app starts"
+        )
+        
+        refresh_interval = st.selectbox(
+            "Auto-refresh interval",
+            options=[0, 300, 600, 1800, 3600],
+            format_func=lambda x: "Manual" if x == 0 else f"{x//60} minutes",
+            index=1,
+            help="How often to automatically refresh data (0 = manual only)"
+        )
+    
+    with col2:
+        if st.button("💾 Save Auto-Load Settings", type="primary"):
+            st.session_state.auto_load_enabled = auto_load_enabled
+            st.session_state.refresh_interval = refresh_interval
+            st.success("✅ Auto-load settings saved!")
+    
     # Sheet configuration
     st.subheader("📊 Sheet Configuration")
     
@@ -528,6 +707,10 @@ def render_settings_tab(sheets_manager):
         if 'pricing_sheet_url' in st.session_state:
             st.info(f"**Sheet URL:** {st.session_state.pricing_sheet_url}")
             st.info(f"**Worksheet:** {st.session_state.get('pricing_worksheet_name', 'Default')}")
+            
+            if 'last_auto_load' in st.session_state and st.session_state.last_auto_load:
+                last_load = st.session_state.last_auto_load.strftime("%Y-%m-%d %H:%M:%S")
+                st.info(f"**Last Loaded:** {last_load}")
         else:
             st.warning("No sheet configured")
     
@@ -562,6 +745,7 @@ def render_settings_tab(sheets_manager):
         
         # Check for common issues
         issues = []
+        warnings = []
         
         # Check for missing prices
         price_cols = [col for col in df.columns if any(term in col.lower() for term in ['price', 'cost', 'rate', 'amount'])]
@@ -574,7 +758,7 @@ def render_settings_tab(sheets_manager):
         if len(df.columns) > 0:
             duplicates = df.duplicated(subset=[df.columns[0]]).sum()
             if duplicates > 0:
-                issues.append(f"❌ {duplicates} duplicate service names")
+                warnings.append(f"⚠️ {duplicates} duplicate service names")
         
         # Check for negative prices
         if price_cols:
@@ -582,12 +766,37 @@ def render_settings_tab(sheets_manager):
             if negative_prices > 0:
                 issues.append(f"❌ {negative_prices} services with negative prices")
         
+        # Check for extremely high prices (potential data entry errors)
+        if price_cols:
+            prices = pd.to_numeric(df[price_cols[0]], errors='coerce').dropna()
+            if len(prices) > 0:
+                q3 = prices.quantile(0.75)
+                iqr = prices.quantile(0.75) - prices.quantile(0.25)
+                outlier_threshold = q3 + (1.5 * iqr)
+                extreme_outliers = (prices > outlier_threshold * 10).sum()
+                if extreme_outliers > 0:
+                    warnings.append(f"⚠️ {extreme_outliers} services with extremely high prices (potential data entry errors)")
+        
+        # Display results
         if issues:
-            st.error("**Data Issues Found:**")
+            st.error("**Critical Issues Found:**")
             for issue in issues:
                 st.write(issue)
-        else:
+        
+        if warnings:
+            st.warning("**Warnings:**")
+            for warning in warnings:
+                st.write(warning)
+        
+        if not issues and not warnings:
             st.success("✅ No data issues found!")
+        
+        # Data quality score
+        total_checks = 4
+        passed_checks = total_checks - len(issues) - len(warnings)
+        quality_score = (passed_checks / total_checks) * 100
+        
+        st.metric("📊 Data Quality Score", f"{quality_score:.1f}%")
     
     # Export settings
     st.subheader("📤 Export Settings")
@@ -604,9 +813,41 @@ def render_settings_tab(sheets_manager):
         st.write("**Export Options:**")
         include_charts = st.checkbox("Include charts in PDF", value=True)
         include_summary = st.checkbox("Include summary statistics", value=True)
+        
+        # Store export preferences
+        if st.button("💾 Save Export Preferences"):
+            st.session_state.export_include_charts = include_charts
+            st.session_state.export_include_summary = include_summary
+            st.success("✅ Export preferences saved!")
+    
+    # System status
+    st.subheader("🔧 System Status")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        # Check Google Sheets connection
+        if st.session_state.get("global_gsheets_creds"):
+            st.success("✅ Google Sheets Connected")
+        else:
+            st.error("❌ Google Sheets Not Connected")
+    
+    with col2:
+        # Check data status
+        if 'pricing_data' in st.session_state and st.session_state.pricing_data is not None:
+            st.success(f"✅ Data Loaded ({len(st.session_state.pricing_data)} rows)")
+        else:
+            st.warning("⚠️ No Data Loaded")
+    
+    with col3:
+        # Auto-load status
+        if st.session_state.get('auto_load_enabled', True):
+            st.success("✅ Auto-Load Enabled")
+        else:
+            st.info("ℹ️ Auto-Load Disabled")
 
 def load_pricing_data(sheets_manager, sheet_url, worksheet_name):
-    """Load pricing data from Google Sheets"""
+    """Load pricing data from Google Sheets (kept for backward compatibility)"""
     try:
         with st.spinner("Loading pricing data..."):
             df = sheets_manager.get_sheet_data(
@@ -619,6 +860,7 @@ def load_pricing_data(sheets_manager, sheet_url, worksheet_name):
                 st.session_state.pricing_data = df
                 st.session_state.pricing_sheet_url = sheet_url
                 st.session_state.pricing_worksheet_name = worksheet_name
+                st.session_state.last_auto_load = datetime.now()
                 st.success(f"✅ Loaded {len(df):,} pricing records")
             else:
                 st.error("❌ No data found or sheet is empty")
@@ -642,6 +884,7 @@ def save_pricing_changes(sheets_manager, edited_df, original_indices):
         
         if sheets_manager.update_sheet_data(sheet_url, full_df, worksheet_name):
             st.session_state.pricing_data = full_df
+            st.session_state.last_auto_load = datetime.now()
             st.success("✅ Changes saved to Google Sheets!")
         else:
             st.error("❌ Failed to save changes")
@@ -678,6 +921,16 @@ def create_pricing_pdf(df):
         summary_style = styles['Normal']
         elements.append(Paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", summary_style))
         elements.append(Paragraph(f"Total Services: {len(df)}", summary_style))
+        
+        # Add summary statistics if enabled
+        if st.session_state.get('export_include_summary', True):
+            price_cols = [col for col in df.columns if any(term in col.lower() for term in ['price', 'cost', 'rate', 'amount'])]
+            if price_cols:
+                prices = pd.to_numeric(df[price_cols[0]], errors='coerce').dropna()
+                if len(prices) > 0:
+                    elements.append(Paragraph(f"Average Price: ${prices.mean():.2f}", summary_style))
+                    elements.append(Paragraph(f"Price Range: ${prices.min():.2f} - ${prices.max():.2f}", summary_style))
+        
         elements.append(Spacer(1, 20))
         
         # Table data
@@ -707,6 +960,20 @@ def create_pricing_pdf(df):
     except Exception as e:
         st.error(f"Error creating PDF: {str(e)}")
         return None
+
+# Background refresh function (optional - for advanced implementations)
+def setup_background_refresh(sheets_manager):
+    """Setup background refresh timer (for future implementation)"""
+    refresh_interval = st.session_state.get('refresh_interval', 0)
+    
+    if refresh_interval > 0:
+        # This would require a background task implementation
+        # For now, we'll implement manual refresh checking
+        if 'last_auto_load' in st.session_state and st.session_state.last_auto_load:
+            time_since_load = datetime.now() - st.session_state.last_auto_load
+            if time_since_load.total_seconds() > refresh_interval:
+                # Time for auto-refresh
+                auto_load_pricing_data(sheets_manager)
 
 if __name__ == "__main__":
     main()
