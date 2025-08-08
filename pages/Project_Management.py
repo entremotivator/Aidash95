@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from io import StringIO
 
 # Page configuration
 st.set_page_config(
@@ -135,94 +134,43 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Google Sheets integration - FIXED VERSION
+# Google Sheets integration
 SHEET_ID = "1NOOKyz9iUzwcsV0EcNJdVNQgQVL9bu3qsn_9wg7e1lE"
+SHEET_NAME = "Tasks"  # The sheet tab name
+CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gsheet?tqx=out:csv&sheet={SHEET_NAME}"
 
 @st.cache_data(ttl=60)  # Cache for 1 minute
 def load_live_tasks():
     """Load tasks from Google Sheets live link"""
-    
-    # List of URLs to try in order
-    urls_to_try = [
-        # Method 1: Standard CSV export with gid=0 (first sheet)
-        f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=0",
-        # Method 2: Try without gid parameter
-        f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv",
-        # Method 3: Using sheet name in the URL path
-        f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv",
-        # Method 4: Original format with sheet name
-        f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gsheet?tqx=out:csv&sheet=Sheet1",
-        # Method 5: Try with different sheet names
-        f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gsheet?tqx=out:csv&sheet=Tasks",
-    ]
-    
-    for i, url in enumerate(urls_to_try, 1):
-        try:
-            # Add headers to mimic browser request
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
-            
-            response = requests.get(url, headers=headers, timeout=15)
-            
-            # Check if we got a redirect to login (means sheet is private)
-            if 'accounts.google.com' in response.url or response.status_code == 401:
-                continue
-                
-            response.raise_for_status()
-            
-            # Check if response contains actual CSV data
-            content = response.text.strip()
-            if len(content) < 10 or 'DOCTYPE html' in content:
-                continue
-            
-            # Try to parse as CSV
-            df = pd.read_csv(StringIO(content))
-            
-            # Clean and validate data
-            df.columns = df.columns.str.strip()
-            df = df.dropna(how='all')
-            
-            # Check if we have meaningful data
-            if len(df) > 0 and len(df.columns) > 1:
-                return df
-            else:
-                continue
-                
-        except:
-            continue
-    
-    # If all methods failed, show instructions and return fallback data
-    st.error("❌ **Failed to load Google Sheets data - using sample data**")
-    
-    # Return comprehensive fallback data
-    return pd.DataFrame({
-        'Task ID': ['TSK001', 'TSK002', 'TSK003', 'TSK004', 'TSK005'],
-        'Executor': ['John Doe', 'Jane Smith', 'Bob Wilson', 'Alice Brown', 'Charlie Davis'],
-        'Date': ['2025-08-05', '2025-08-06', '2025-08-07', '2025-08-08', '2025-08-09'],
-        'Reminder Time': ['09:00', '14:00', '10:30', '16:00', '11:15'],
-        'Task Description': [
-            'Complete project documentation',
-            'Review system requirements', 
-            'Update database schema',
-            'Deploy to staging environment',
-            'Conduct user acceptance testing'
-        ],
-        'Object': ['Documentation', 'Requirements', 'Database', 'Deployment', 'Testing'],
-        'Section': ['Development', 'Analysis', 'Database', 'DevOps', 'QA'],
-        'Priority': ['High', 'Medium', 'Low', 'High', 'Medium'],
-        'Executor ID': ['1001', '1002', '1003', '1004', '1005'],
-        'Company': ['TechCorp', 'DataSys', 'DevTools', 'CloudInc', 'TestLab'],
-        'Reminder Sent': ['Yes', 'No', 'Yes', 'No', 'Yes'],
-        'Reminder Sent Date': ['2025-08-05', '', '2025-08-07', '', '2025-08-09'],
-        'Reminder Read': ['Yes', 'No', 'No', 'No', 'Yes'],
-        'Read Time': ['09:15', '', '', '', '11:30'],
-        'Reminder Count': ['1', '0', '2', '0', '1'],
-        'Reminder Interval if No Report': ['24h', '12h', '6h', '48h', '24h'],
-        'Status': ['In Progress', 'Pending', 'Completed', 'Pending', 'In Progress'],
-        'Comment': ['On track', 'Waiting for approval', 'Done', 'Not started', 'In review'],
-        'Report Date': ['2025-08-05', '', '2025-08-07', '', '2025-08-09']
-    })
+    try:
+        df = pd.read_csv(CSV_URL)
+        # Clean column names
+        df.columns = df.columns.str.strip()
+        return df
+    except Exception as e:
+        st.error(f"Error loading live data: {str(e)}")
+        # Fallback to sample data
+        return pd.DataFrame({
+            'Task ID': ['ID1', 'ID2', 'ID3'],
+            'Executor': ['John Doe', 'Jane Smith', 'Bob Wilson'],
+            'Date': ['2025-08-05', '2025-08-06', '2025-08-07'],
+            'Reminder Time': ['09:00', '14:00', '10:30'],
+            'Task Description': ['Sample Task 1', 'Sample Task 2', 'Sample Task 3'],
+            'Object': ['Object 1', 'Object 2', 'Object 3'],
+            'Section': ['Section A', 'Section B', 'Section C'],
+            'Priority': ['High', 'Medium', 'Low'],
+            'Executor ID': ['1001', '1002', '1003'],
+            'Company': ['Company A', 'Company B', 'Company C'],
+            'Reminder Sent': ['Yes', 'No', 'Yes'],
+            'Reminder Sent Date': ['2025-08-05', '', '2025-08-07'],
+            'Reminder Read': ['Yes', 'No', 'No'],
+            'Read Time': ['09:15', '', ''],
+            'Reminder Count': ['1', '0', '2'],
+            'Reminder Interval if No Report': ['24h', '12h', '6h'],
+            'Status': ['In Progress', 'Pending', 'Completed'],
+            'Comment': ['On track', 'Waiting for approval', 'Done'],
+            'Report Date': ['2025-08-05', '', '2025-08-07']
+        })
 
 # Load data
 tasks_df = load_live_tasks()
@@ -423,15 +371,54 @@ with tab2:
                 st.success(f"✅ Task '{new_task_id}' would be added to the system!")
                 st.info("💡 Note: This is a demo. In production, this would update the Google Sheet.")
     
-    # Task grid view
+    # Task cards view
     st.subheader("📋 Current Tasks")
     
-    # Display as grid/table
-    st.dataframe(
-        filtered_df,
-        use_container_width=True,
-        height=600
-    )
+    # View options
+    view_mode = st.radio("View Mode", ["Cards", "Table"], horizontal=True)
+    
+    if view_mode == "Cards":
+        # Display tasks as cards
+        for idx, task in filtered_df.iterrows():
+            priority_class = f"priority-{task.get('Priority', 'medium').lower()}"
+            status_class = f"status-{task.get('Status', 'todo').lower().replace(' ', '')}"
+            
+            st.markdown(f"""
+            <div class="task-card {priority_class} {status_class}">
+                <div style="display: flex; justify-content: between; align-items: center;">
+                    <h4 style="margin: 0; color: #1976d2;">🆔 {task.get('Task ID', 'N/A')} - {task.get('Task Description', 'No description')}</h4>
+                    <span style="background: #e3f2fd; padding: 5px 10px; border-radius: 15px; font-size: 12px; color: #1976d2;">
+                        {task.get('Priority', 'N/A')}
+                    </span>
+                </div>
+                <p style="margin: 10px 0; color: #666;">
+                    <strong>👤 Executor:</strong> {task.get('Executor', 'N/A')} | 
+                    <strong>🏢 Company:</strong> {task.get('Company', 'N/A')} | 
+                    <strong>📅 Date:</strong> {task.get('Date', 'N/A')}
+                </p>
+                <p style="margin: 10px 0; color: #666;">
+                    <strong>📍 Section:</strong> {task.get('Section', 'N/A')} | 
+                    <strong>🎯 Object:</strong> {task.get('Object', 'N/A')} | 
+                    <strong>📊 Status:</strong> {task.get('Status', 'N/A')}
+                </p>
+                <p style="margin: 10px 0; color: #666;">
+                    <strong>⏰ Reminder:</strong> {task.get('Reminder Time', 'N/A')} | 
+                    <strong>📧 Sent:</strong> {task.get('Reminder Sent', 'N/A')} | 
+                    <strong>👁️ Read:</strong> {task.get('Reminder Read', 'N/A')}
+                </p>
+                <p style="margin: 10px 0; color: #666;">
+                    <strong>💬 Comment:</strong> {task.get('Comment', 'No comment')}
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    else:
+        # Display as table
+        st.dataframe(
+            filtered_df,
+            use_container_width=True,
+            height=600
+        )
 
 with tab3:
     st.header("📊 Analytics & Insights")
@@ -595,8 +582,8 @@ with tab6:
     
     st.subheader("🔗 Data Source Configuration")
     st.info(f"📊 **Google Sheets ID:** {SHEET_ID}")
-    st.info("📋 **Primary URL:** /export?format=csv&gid=0")
-    st.info("🔄 **Fallback URL:** /gsheet?tqx=out:csv&sheet=Tasks")
+    st.info(f"📋 **Sheet Name:** {SHEET_NAME}")
+    st.info(f"🔗 **CSV URL:** {CSV_URL}")
     
     st.subheader("🔄 Refresh Settings")
     st.info("⏱️ **Cache TTL:** 60 seconds")
@@ -616,11 +603,11 @@ with tab6:
         })
         st.dataframe(cols_info, use_container_width=True, hide_index=True)
     else:
-        st.error("❌ **No data available**")afe_allow_html=True)
+        st.error("❌ **No data available**")
 
 # Footer
 st.markdown("---")
-st.markdown(f"""
+st.markdown("""
 <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #e3f2fd, #f0f8ff); border-radius: 15px; margin-top: 20px;">
     <h3 style="color: #1976d2; margin: 0;">🚀 Enhanced Project Management System</h3>
     <p style="color: #666; margin: 10px 0;">Live Google Sheets Integration • Real-time Data • Advanced Analytics</p>
@@ -633,3 +620,4 @@ if auto_refresh:
     import time
     time.sleep(60)
     st.rerun()
+
