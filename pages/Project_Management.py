@@ -136,8 +136,8 @@ st.markdown("""
 
 # Google Sheets integration
 SHEET_ID = "1NOOKyz9iUzwcsV0EcNJdVNQgQVL9bu3qsn_9wg7e1lE"
-SHEET_NAME = "Tasks"  # The sheet tab name
-CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gsheet?tqx=out:csv&sheet={SHEET_NAME}"
+SHEET_NAME = "Tasks"  # Tab name in the sheet
+CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME}"
 
 @st.cache_data(ttl=60)  # Cache for 1 minute
 def load_live_tasks():
