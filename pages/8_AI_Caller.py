@@ -586,35 +586,40 @@ def test_api_connection(api_key: str) -> Dict:
 
 # Navigation
 def render_navigation():
-    """Render the navigation sidebar with unique keys."""
+    """Render the navigation sidebar with unique keys and API key management."""
     with st.sidebar:
         st.title("📞 Vapi Pro Enhanced")
         
-        # API Key input with unique key
+        # Get the API key from secrets, fallback to session_state if not set
+        secret_api_key = st.secrets.get("vapi_api_key", "")
+        current_api_key = st.session_state.get("api_key", secret_api_key)
+        
+        # Input field for API key with a unique key and password masking
         api_key = st.text_input(
             "🔑 Vapi API Key", 
             type="password",
-            value=safe_str(st.session_state.api_key),
+            value=current_api_key,
             help="Your Vapi API key (from secrets or manual input)",
             key="nav_sidebar_api_key_input_robust_001"
         )
         
-        if api_key != st.session_state.api_key:
+        # Update session_state if API key changed
+        if api_key != current_api_key:
             st.session_state.api_key = api_key
         
-        # Show if using secrets
-        if vapi_config.get('api_key'):
+        # Show confirmation if using the API key from secrets
+        if secret_api_key and api_key == secret_api_key:
             st.success("✅ Using API key from secrets")
         
-        # API Connection Status
+        # API Connection Status test button
         if api_key:
             if st.button("🔍 Test Connection", key="nav_sidebar_test_connection_btn_robust_002"):
                 with st.spinner("Testing..."):
                     result = test_api_connection(api_key)
-                    if result["success"]:
+                    if result.get("success"):
                         st.success("✅ Connected!")
                     else:
-                        st.error(f"❌ {safe_str(result['error'])}")
+                        st.error(f"❌ {safe_str(result.get('error', 'Unknown error'))}")
         
         st.divider()
         
