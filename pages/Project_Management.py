@@ -376,44 +376,48 @@ with tab2:
     
     # View options
     view_mode = st.radio("View Mode", ["Cards", "Table"], horizontal=True)
-    
-    if view_mode == "Cards":
+
+if view_mode == "Cards":
     # Display tasks as cards
     for idx, task in filtered_df.iterrows():
+        # Safely handle missing values in Series
         priority = str(task['Priority']) if 'Priority' in task and pd.notna(task['Priority']) else 'medium'
         status = str(task['Status']) if 'Status' in task and pd.notna(task['Status']) else 'todo'
 
         priority_class = f"priority-{priority.lower()}"
         status_class = f"status-{status.lower().replace(' ', '')}"
-            
-            st.markdown(f"""
-            <div class="task-card {priority_class} {status_class}">
-                <div style="display: flex; justify-content: between; align-items: center;">
-                    <h4 style="margin: 0; color: #1976d2;">🆔 {task.get('Task ID', 'N/A')} - {task.get('Task Description', 'No description')}</h4>
-                    <span style="background: #e3f2fd; padding: 5px 10px; border-radius: 15px; font-size: 12px; color: #1976d2;">
-                        {task.get('Priority', 'N/A')}
-                    </span>
-                </div>
-                <p style="margin: 10px 0; color: #666;">
-                    <strong>👤 Executor:</strong> {task.get('Executor', 'N/A')} | 
-                    <strong>🏢 Company:</strong> {task.get('Company', 'N/A')} | 
-                    <strong>📅 Date:</strong> {task.get('Date', 'N/A')}
-                </p>
-                <p style="margin: 10px 0; color: #666;">
-                    <strong>📍 Section:</strong> {task.get('Section', 'N/A')} | 
-                    <strong>🎯 Object:</strong> {task.get('Object', 'N/A')} | 
-                    <strong>📊 Status:</strong> {task.get('Status', 'N/A')}
-                </p>
-                <p style="margin: 10px 0; color: #666;">
-                    <strong>⏰ Reminder:</strong> {task.get('Reminder Time', 'N/A')} | 
-                    <strong>📧 Sent:</strong> {task.get('Reminder Sent', 'N/A')} | 
-                    <strong>👁️ Read:</strong> {task.get('Reminder Read', 'N/A')}
-                </p>
-                <p style="margin: 10px 0; color: #666;">
-                    <strong>💬 Comment:</strong> {task.get('Comment', 'No comment')}
-                </p>
+
+        st.markdown(f"""
+        <div class="task-card {priority_class} {status_class}">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h4 style="margin: 0; color: #1976d2;">
+                    🆔 {task.get('Task ID', 'N/A') if isinstance(task, dict) else task.get('Task ID', 'N/A') if 'Task ID' in task else 'N/A'} 
+                    - {task.get('Task Description', 'No description') if isinstance(task, dict) else task['Task Description'] if 'Task Description' in task else 'No description'}
+                </h4>
+                <span style="background: #e3f2fd; padding: 5px 10px; border-radius: 15px; font-size: 12px; color: #1976d2;">
+                    {priority}
+                </span>
             </div>
-            """, unsafe_allow_html=True)
+            <p style="margin: 10px 0; color: #666;">
+                <strong>👤 Executor:</strong> {task['Executor'] if 'Executor' in task and pd.notna(task['Executor']) else 'N/A'} | 
+                <strong>🏢 Company:</strong> {task['Company'] if 'Company' in task and pd.notna(task['Company']) else 'N/A'} | 
+                <strong>📅 Date:</strong> {task['Date'] if 'Date' in task and pd.notna(task['Date']) else 'N/A'}
+            </p>
+            <p style="margin: 10px 0; color: #666;">
+                <strong>📍 Section:</strong> {task['Section'] if 'Section' in task and pd.notna(task['Section']) else 'N/A'} | 
+                <strong>🎯 Object:</strong> {task['Object'] if 'Object' in task and pd.notna(task['Object']) else 'N/A'} | 
+                <strong>📊 Status:</strong> {status}
+            </p>
+            <p style="margin: 10px 0; color: #666;">
+                <strong>⏰ Reminder:</strong> {task['Reminder Time'] if 'Reminder Time' in task and pd.notna(task['Reminder Time']) else 'N/A'} | 
+                <strong>📧 Sent:</strong> {task['Reminder Sent'] if 'Reminder Sent' in task and pd.notna(task['Reminder Sent']) else 'N/A'} | 
+                <strong>👁️ Read:</strong> {task['Reminder Read'] if 'Reminder Read' in task and pd.notna(task['Reminder Read']) else 'N/A'}
+            </p>
+            <p style="margin: 10px 0; color: #666;">
+                <strong>💬 Comment:</strong> {task['Comment'] if 'Comment' in task and pd.notna(task['Comment']) else 'No comment'}
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
     
     else:
         # Display as table
