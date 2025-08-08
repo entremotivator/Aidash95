@@ -204,25 +204,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- Session State Initialization ----------
-def initialize_session_state():
-    defaults = {
-        "connection_status": "sample",
-        "events_data": create_sample_data() if 'events_data' not in st.session_state else st.session_state.events_data,
-        "error_message": None,
-        "client": None,
-        "spreadsheet": None,
-        "auto_refresh": False,
-        "last_refresh": datetime.now()
-    }
-    for key, value in defaults.items():
-        if key not in st.session_state:
-            st.session_state[key] = value
-
-initialize_session_state()
-
-# ---------- Helper Functions ----------
+# ---------- Helper Functions (Define BEFORE session state) ----------
 def create_sample_data():
+    """Create sample appointment data"""
     now = datetime.now()
     return pd.DataFrame({
         'Name': ['John Doe', 'Jane Smith', 'Bob Johnson', 'Alice Brown', 'Charlie Wilson', 'Diana Prince'],
@@ -247,6 +231,7 @@ def create_sample_data():
     })
 
 def load_data_from_sheets(sheet_url):
+    """Load data from Google Sheets"""
     if not st.session_state.get("global_gsheets_creds"):
         return None, None, "No global credentials found"
     
@@ -272,6 +257,7 @@ def load_data_from_sheets(sheet_url):
         return None, None, f"Error reading sheet: {e}"
 
 def refresh_data():
+    """Refresh data from Google Sheets or use sample data"""
     if st.session_state.get("global_gsheets_creds"):
         df, connection_info, err = load_data_from_sheets(STATIC_SHEET_URL)
         if err:
@@ -283,7 +269,12 @@ def refresh_data():
                 st.session_state.client, st.session_state.spreadsheet = connection_info
             st.session_state.connection_status = "connected"
             st.session_state.error_message = None
-            st.session_state.last_refresh = datetime.now()
+    else:
+        # Use sample data if no credentials
+        st.session_state.events_data = create_sample_data()
+        st.session_state.connection_status = "sample"
+    
+    st.session_state.last_refresh = datetime.now()
 
 def get_appointment_time_status(start_time_24hr):
     """Determine if appointment is upcoming, current, or past"""
@@ -359,6 +350,25 @@ def render_appointment_card(row, index):
     </div>
     """, unsafe_allow_html=True)
 
+# ---------- Session State Initialization (AFTER helper functions) ----------
+def initialize_session_state():
+    """Initialize session state with default values"""
+    defaults = {
+        "connection_status": "sample",
+        "events_data": create_sample_data() if 'events_data' not in st.session_state else st.session_state.events_data,
+        "error_message": None,
+        "client": None,
+        "spreadsheet": None,
+        "auto_refresh": False,
+        "last_refresh": datetime.now()
+    }
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
+
+# Initialize session state
+initialize_session_state()
+
 # ---------- Main Application ----------
 def main():
     # Header
@@ -406,14 +416,16 @@ def main():
         if st.session_state.last_refresh:
             st.caption(f"Last updated: {st.session_state.last_refresh.strftime('%H:%M:%S')}")
     
-    # Auto-refresh logic
+    # Auto-refresh logic (simplified to avoid blocking)
     if st.session_state.auto_refresh:
-        time.sleep(30)
-        refresh_data()
-        st.rerun()
+        # Check if 30 seconds have passed since last refresh
+        time_since_refresh = (datetime.now() - st.session_state.last_refresh).total_seconds()
+        if time_since_refresh >= 30:
+            refresh_data()
+            st.rerun()
     
     # Load data if needed
-    if st.session_state.connection_status != "connected" and st.session_state.get("global_gsheets_creds"):
+    if st.session_state.connection_status == "sample" and st.session_state.get("global_gsheets_creds"):
         refresh_data()
     
     # Error handling
@@ -421,7 +433,9 @@ def main():
         st.error("❌ Google Sheets Connection Failed")
         with st.expander("Error Details", expanded=True):
             st.write(st.session_state.error_message)
-        st.stop()
+        st.info("Using sample data instead...")
+        st.session_state.events_data = create_sample_data()
+        st.session_state.connection_status = "sample"
     
     # Get data
     df = st.session_state.events_data.copy()
