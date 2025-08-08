@@ -168,43 +168,6 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
     }
     
-    /* Enhanced time display */
-    .time-display {
-        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-        padding: 1.5rem;
-        border-radius: 15px;
-        text-align: center;
-        margin: 0.5rem 0;
-        border: 2px solid #dee2e6;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .time-display::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #667eea, #764ba2);
-    }
-    
-    .time-large {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #495057;
-        margin-bottom: 0.5rem;
-    }
-    
-    .time-label {
-        font-size: 0.9rem;
-        color: #6c757d;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
     /* Premium metric cards */
     .metric-card {
         background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
@@ -355,154 +318,6 @@ st.markdown("""
         60% { transform: translateY(-5px); }
     }
     
-    /* Enhanced host avatar */
-    .host-avatar {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 700;
-        font-size: 1.2rem;
-        margin-right: 1rem;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        border: 3px solid white;
-        transition: transform 0.3s ease;
-    }
-    
-    .host-avatar:hover {
-        transform: scale(1.1) rotate(5deg);
-    }
-    
-    /* Enhanced info sections */
-    .info-section {
-        background: rgba(248, 249, 250, 0.8);
-        padding: 1.5rem;
-        border-radius: 15px;
-        margin: 1rem 0;
-        border-left: 4px solid #667eea;
-        backdrop-filter: blur(10px);
-    }
-    
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin: 1rem 0;
-    }
-    
-    .info-item {
-        display: flex;
-        align-items: center;
-        gap: 0.8rem;
-        padding: 0.8rem;
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        transition: transform 0.2s ease;
-    }
-    
-    .info-item:hover {
-        transform: translateX(5px);
-    }
-    
-    .info-icon {
-        width: 35px;
-        height: 35px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.1rem;
-        color: white;
-        background: linear-gradient(45deg, #667eea, #764ba2);
-    }
-    
-    /* Action buttons */
-    .action-button {
-        background: linear-gradient(45deg, #007bff, #0056b3);
-        color: white;
-        padding: 0.8rem 1.5rem;
-        border-radius: 25px;
-        text-decoration: none;
-        font-size: 0.9rem;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: all 0.3s ease;
-        border: none;
-        cursor: pointer;
-        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
-    }
-    
-    .action-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
-        text-decoration: none;
-        color: white;
-    }
-    
-    .action-button.secondary {
-        background: linear-gradient(45deg, #6c757d, #495057);
-        box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
-    }
-    
-    .action-button.secondary:hover {
-        box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
-    }
-    
-    /* Progress indicators */
-    .progress-ring {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: conic-gradient(from 0deg, #667eea, #764ba2, #f093fb, #667eea);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        animation: rotate 3s linear infinite;
-    }
-    
-    .progress-ring::before {
-        content: '';
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        background: white;
-    }
-    
-    @keyframes rotate {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-    
-    /* Notification badges */
-    .notification-badge {
-        position: absolute;
-        top: -8px;
-        right: -8px;
-        background: #dc3545;
-        color: white;
-        border-radius: 50%;
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.7rem;
-        font-weight: 600;
-        animation: notificationPulse 2s infinite;
-    }
-    
-    @keyframes notificationPulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.2); }
-    }
-    
     /* Enhanced footer */
     .dashboard-footer {
         background: linear-gradient(135deg, #f8f9fa, #e9ecef);
@@ -517,9 +332,7 @@ st.markdown("""
     @media (max-width: 768px) {
         .main-header h1 { font-size: 2rem; }
         .appointment-card { padding: 1.5rem; margin: 1rem 0; }
-        .info-grid { grid-template-columns: 1fr; }
         .metric-value { font-size: 2rem; }
-        .host-avatar { width: 50px; height: 50px; font-size: 1rem; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -568,7 +381,7 @@ def create_sample_data():
     
     # Generate appointments for the next 7 days
     appointments = []
-    for i in range(20):
+    for i in range(25):
         # Random date within next 7 days
         days_ahead = random.randint(0, 7)
         appointment_date = now + timedelta(days=days_ahead)
@@ -701,25 +514,22 @@ def get_appointment_priority_class(row):
     
     return base_class
 
-def render_enhanced_appointment_card(row, index):
-    """Render a comprehensive appointment card with all details"""
+def render_appointment_card_streamlit(row, index):
+    """Render appointment card using pure Streamlit components"""
     card_class = get_appointment_priority_class(row)
     
     # Status styling
     status = row.get('Status', '').lower()
     status_class = f"status-badge status-{status}"
     
-    # Host avatar
-    host_name = row.get('Host', 'Unknown')
-    host_initials = ''.join([name[0].upper() for name in host_name.split()[:2]])
-    
     # Priority indicator
     priority = row.get('Priority', 'Medium')
-    priority_color = {
-        'High': '#dc3545',
-        'Medium': '#ffc107', 
-        'Low': '#28a745'
-    }.get(priority, '#6c757d')
+    priority_colors = {
+        'High': '🔴',
+        'Medium': '🟡', 
+        'Low': '🟢'
+    }
+    priority_icon = priority_colors.get(priority, '⚪')
     
     # Time until appointment
     try:
@@ -733,186 +543,124 @@ def render_enhanced_appointment_card(row, index):
             hours = int(time_diff.total_seconds() // 3600)
             minutes = int((time_diff.total_seconds() % 3600) // 60)
             time_until = f"{hours}h {minutes}m" if hours > 0 else f"{minutes}m"
-            time_status = "upcoming"
+            time_status = "⏰ Upcoming"
         else:
             time_until = "Now" if abs(time_diff.total_seconds()) <= 900 else "Past"
-            time_status = "current" if time_until == "Now" else "past"
+            time_status = "🔴 Current" if time_until == "Now" else "✅ Past"
     except:
         time_until = "Unknown"
-        time_status = "unknown"
+        time_status = "❓ Unknown"
     
-    st.markdown(f"""
-    <div class="{card_class}">
-         Header Section 
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
-            <div style="display: flex; align-items: center; flex: 1;">
-                <div class="host-avatar" title="Host: {host_name}">{host_initials}</div>
-                <div style="flex: 1;">
-                    <h3 style="margin: 0; color: #2c3e50; font-size: 1.4rem; font-weight: 600;">{row.get('Name', 'N/A')}</h3>
-                    <p style="margin: 0.3rem 0 0 0; color: #7f8c8d; font-size: 1rem;">{row.get('Email', 'N/A')}</p>
-                    <div style="margin-top: 0.5rem;">
-                        <span style="background: {priority_color}; color: white; padding: 0.2rem 0.8rem; border-radius: 15px; font-size: 0.75rem; font-weight: 600;">
-                            {priority} Priority
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div style="text-align: right; position: relative;">
-                <span class="{status_class}">{row.get('Status', 'N/A')}</span>
-                <div style="margin-top: 0.5rem;">
-                    <small style="color: #7f8c8d; font-weight: 500;">ID: {row.get('Event ID', 'N/A')}</small>
-                </div>
-                {f'<div class="notification-badge">{len(row.get("Description", "").split())}</div>' if len(row.get("Description", "").split()) > 10 else ''}
-            </div>
-        </div>
+    # Create the card using Streamlit components
+    with st.container():
+        # Apply custom CSS class
+        st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
         
-         Time and Duration Section 
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-            <div class="time-display">
-                <div class="time-large">{row.get('Start Time (12hr)', 'N/A')}</div>
-                <div class="time-label">Start Time</div>
-            </div>
-            <div class="time-display">
-                <div class="time-large">{row.get('Duration', '1 hour')}</div>
-                <div class="time-label">Duration</div>
-            </div>
-            <div class="time-display">
-                <div class="time-large" style="color: {priority_color};">{time_until}</div>
-                <div class="time-label">Time Until</div>
-            </div>
-        </div>
+        # Header section with name, email, and status
+        col1, col2 = st.columns([3, 1])
         
-         Information Grid 
-        <div class="info-grid">
-            <div class="info-item">
-                <div class="info-icon">👤</div>
-                <div>
-                    <strong>Host</strong><br>
-                    <span style="color: #6c757d;">{row.get('Host', 'N/A')}</span>
-                </div>
-            </div>
-            <div class="info-item">
-                <div class="info-icon">📍</div>
-                <div>
-                    <strong>Location</strong><br>
-                    <span style="color: #6c757d;">{row.get('Location', 'Virtual')}</span>
-                </div>
-            </div>
-            <div class="info-item">
-                <div class="info-icon">🔑</div>
-                <div>
-                    <strong>Access Code</strong><br>
-                    <span style="color: #6c757d; font-family: monospace;">{row.get('Unique Code', 'N/A')}</span>
-                </div>
-            </div>
-            <div class="info-item">
-                <div class="info-icon">📅</div>
-                <div>
-                    <strong>Date</strong><br>
-                    <span style="color: #6c757d;">{row.get('Date', 'N/A')}</span>
-                </div>
-            </div>
-        </div>
+        with col1:
+            # Host initials
+            host_name = row.get('Host', 'Unknown')
+            host_initials = ''.join([name[0].upper() for name in host_name.split()[:2]])
+            
+            st.markdown(f"### 👤 {host_initials} | {row.get('Name', 'N/A')}")
+            st.markdown(f"**📧 Email:** {row.get('Email', 'N/A')}")
+            st.markdown(f"**{priority_icon} Priority:** {priority}")
         
-         Description Section 
-        {f'''
-        <div class="info-section">
-            <h4 style="margin: 0 0 0.8rem 0; color: #495057; font-size: 1.1rem;">📋 Meeting Description</h4>
-            <p style="margin: 0; color: #6c757d; line-height: 1.6; font-size: 1rem;">{row.get("Description", "No description provided")}</p>
-        </div>
-        ''' if row.get('Description') else ''}
+        with col2:
+            # Status badge
+            st.markdown(f'<span class="{status_class}">{row.get("Status", "N/A")}</span>', unsafe_allow_html=True)
+            st.markdown(f"**🆔 ID:** {row.get('Event ID', 'N/A')}")
         
-         Guest Information 
-        {f'''
-        <div class="info-section">
-            <h4 style="margin: 0 0 0.8rem 0; color: #495057; font-size: 1.1rem;">👥 Guest Information</h4>
-            <div style="display: flex; align-items: center; gap: 0.8rem;">
-                <div style="width: 35px; height: 35px; border-radius: 50%; background: linear-gradient(45deg, #17a2b8, #20c997); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
-                    {row.get("Guest Email", "").split("@")[0][0].upper() if row.get("Guest Email") else "G"}
-                </div>
-                <span style="color: #6c757d; font-size: 1rem;">{row.get("Guest Email", "No guest")}</span>
-            </div>
-        </div>
-        ''' if row.get('Guest Email') else ''}
+        st.markdown("---")
         
-         Action Buttons and Footer 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e9ecef;">
-            <div style="display: flex; gap: 1rem;">
-                {f'<a href="{row.get("Meet Link", "#")}" target="_blank" class="action-button">🎥 Join Meeting</a>' if row.get('Meet Link') else ''}
-                <button class="action-button secondary">📝 Edit</button>
-                <button class="action-button secondary">📧 Send Reminder</button>
-            </div>
-            <div style="text-align: right;">
-                <small style="color: #7f8c8d; font-size: 0.85rem;">
-                    Last updated: {row.get('Upload_Timestamp', 'N/A')}<br>
-                    <span style="color: {priority_color}; font-weight: 600;">● {time_status.title()}</span>
-                </small>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-def render_analytics_section(df):
-    """Render comprehensive analytics section"""
-    st.markdown("## 📊 Live Analytics Dashboard")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Status distribution pie chart
-        if 'Status' in df.columns:
-            status_counts = df['Status'].value_counts()
-            fig_pie = px.pie(
-                values=status_counts.values, 
-                names=status_counts.index,
-                title="Appointment Status Distribution",
-                color_discrete_sequence=['#28a745', '#ffc107', '#dc3545', '#6c757d']
-            )
-            fig_pie.update_layout(
-                font=dict(size=14),
-                title_font_size=16,
-                showlegend=True
-            )
-            st.plotly_chart(fig_pie, use_container_width=True)
-    
-    with col2:
-        # Host workload bar chart
-        if 'Host' in df.columns:
-            host_counts = df['Host'].value_counts()
-            fig_bar = px.bar(
-                x=host_counts.values,
-                y=host_counts.index,
-                orientation='h',
-                title="Host Workload Distribution",
-                color=host_counts.values,
-                color_continuous_scale='viridis'
-            )
-            fig_bar.update_layout(
-                font=dict(size=14),
-                title_font_size=16,
-                yaxis_title="Host",
-                xaxis_title="Number of Appointments"
-            )
-            st.plotly_chart(fig_bar, use_container_width=True)
-    
-    # Timeline view
-    if 'Date' in df.columns:
-        st.markdown("### 📅 Appointment Timeline")
-        timeline_data = df.groupby('Date').size().reset_index(name='Count')
-        fig_timeline = px.line(
-            timeline_data, 
-            x='Date', 
-            y='Count',
-            title="Appointments Over Time",
-            markers=True
-        )
-        fig_timeline.update_layout(
-            font=dict(size=14),
-            title_font_size=16,
-            xaxis_title="Date",
-            yaxis_title="Number of Appointments"
-        )
-        st.plotly_chart(fig_timeline, use_container_width=True)
+        # Time and duration section
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown("#### ⏰ Start Time")
+            st.markdown(f"**{row.get('Start Time (12hr)', 'N/A')}**")
+            st.caption("Scheduled start")
+        
+        with col2:
+            st.markdown("#### ⏱️ Duration")
+            st.markdown(f"**{row.get('Duration', '1 hour')}**")
+            st.caption("Meeting length")
+        
+        with col3:
+            st.markdown("#### 🕐 Time Until")
+            st.markdown(f"**{time_until}**")
+            st.caption(time_status)
+        
+        st.markdown("---")
+        
+        # Information section
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### 📋 Meeting Details")
+            st.markdown(f"**👤 Host:** {row.get('Host', 'N/A')}")
+            st.markdown(f"**📍 Location:** {row.get('Location', 'Virtual')}")
+            st.markdown(f"**🔑 Access Code:** `{row.get('Unique Code', 'N/A')}`")
+            st.markdown(f"**📅 Date:** {row.get('Date', 'N/A')}")
+        
+        with col2:
+            st.markdown("#### 👥 Participants")
+            if row.get('Guest Email'):
+                guest_initial = row.get('Guest Email', '').split('@')[0][0].upper() if row.get('Guest Email') else 'G'
+                st.markdown(f"**👤 Guest:** {guest_initial} | {row.get('Guest Email', 'No guest')}")
+            else:
+                st.markdown("**👤 Guest:** No guest invited")
+            
+            st.markdown(f"**📊 Status:** {row.get('Status', 'N/A')}")
+            st.markdown(f"**⚡ Priority:** {priority} {priority_icon}")
+        
+        # Description section
+        if row.get('Description'):
+            st.markdown("#### 📝 Description")
+            st.info(row.get('Description', 'No description provided'))
+        
+        # Action buttons section
+        st.markdown("#### 🎯 Actions")
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            if row.get('Meet Link'):
+                st.markdown(f"[🎥 Join Meeting]({row.get('Meet Link', '#')})")
+            else:
+                st.markdown("🎥 No meeting link")
+        
+        with col2:
+            if st.button(f"📝 Edit", key=f"edit_{index}"):
+                st.info(f"Edit functionality for {row.get('Event ID', 'N/A')}")
+        
+        with col3:
+            if st.button(f"📧 Remind", key=f"remind_{index}"):
+                st.success(f"Reminder sent for {row.get('Event ID', 'N/A')}")
+        
+        with col4:
+            if st.button(f"📋 Details", key=f"details_{index}"):
+                st.json({
+                    "Event ID": row.get('Event ID', 'N/A'),
+                    "Name": row.get('Name', 'N/A'),
+                    "Status": row.get('Status', 'N/A'),
+                    "Time": row.get('Start Time (12hr)', 'N/A'),
+                    "Host": row.get('Host', 'N/A')
+                })
+        
+        # Footer with timestamp
+        st.markdown("---")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.caption(f"🕐 Last updated: {row.get('Upload_Timestamp', 'N/A')}")
+        
+        with col2:
+            st.caption(f"📊 Status: {time_status}")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
 
 # ---------- Session State Initialization ----------
 def initialize_session_state():
@@ -925,8 +673,6 @@ def initialize_session_state():
         "spreadsheet": None,
         "auto_refresh": False,
         "last_refresh": datetime.now(),
-        "view_mode": "cards",
-        "show_analytics": False,
         "filter_date_range": "all"
     }
     for key, value in defaults.items():
@@ -980,22 +726,9 @@ def main():
         
         st.markdown("---")
         
-        # View mode selection
-        st.markdown("### 👁️ View Options")
-        view_mode = st.radio(
-            "Display Mode",
-            ["cards", "analytics", "both"],
-            format_func=lambda x: {
-                "cards": "📋 Card View",
-                "analytics": "📊 Analytics Only", 
-                "both": "🔄 Cards + Analytics"
-            }[x]
-        )
-        st.session_state.view_mode = view_mode
-        
         # Date range filter
         date_filter = st.selectbox(
-            "Date Range",
+            "📅 Date Range",
             ["all", "today", "tomorrow", "this_week", "next_week"],
             format_func=lambda x: {
                 "all": "📅 All Dates",
@@ -1180,27 +913,13 @@ def main():
         ).any(axis=1)
         filtered_df = filtered_df[mask]
     
-    # Display content based on view mode
-    if st.session_state.view_mode in ["analytics", "both"]:
-        render_analytics_section(filtered_df)
-        
-        if st.session_state.view_mode == "analytics":
-            return  # Only show analytics
-    
     # Appointments Display Section
     st.markdown(f"""
-    <h2 style="color: #2c3e50; margin: 3rem 0 1.5rem 0; font-size: 2rem; font-weight: 600;">
-        📅 Live Appointments ({len(filtered_df)} found)
-    </h2>
-    """, unsafe_allow_html=True)
+    ## 📅 Live Appointments ({len(filtered_df)} found)
+    """)
     
     if filtered_df.empty:
-        st.markdown("""
-        <div style="text-align: center; padding: 4rem 2rem; background: linear-gradient(135deg, #f8f9fa, #ffffff); border-radius: 20px; margin: 2rem 0;">
-            <h3 style="color: #6c757d; margin-bottom: 1rem;">📭 No appointments found</h3>
-            <p style="color: #6c757d; font-size: 1.1rem;">Try adjusting your filters or search criteria</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.warning("📭 No appointments found matching your criteria. Try adjusting your filters.")
     else:
         # Sort appointments by date and time
         if 'Date' in filtered_df.columns and 'Start Time (24hr)' in filtered_df.columns:
@@ -1216,23 +935,20 @@ def main():
                 
                 # Date header
                 st.markdown(f"""
-                <div style="margin: 2rem 0 1rem 0; padding: 1rem 2rem; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 15px; text-align: center;">
-                    <h3 style="margin: 0; font-size: 1.5rem; font-weight: 600;">{day_name}</h3>
-                    <p style="margin: 0.5rem 0 0 0; font-size: 1.1rem; opacity: 0.9;">{formatted_date}</p>
-                    <small style="opacity: 0.8;">{len(group)} appointments scheduled</small>
-                </div>
-                """, unsafe_allow_html=True)
+                ### 📅 {day_name} - {formatted_date}
+                **{len(group)} appointments scheduled**
+                """)
                 
                 # Render appointments for this date
                 for index, row in group.iterrows():
-                    render_enhanced_appointment_card(row, index)
+                    render_appointment_card_streamlit(row, index)
         else:
             # Fallback: render all appointments without date grouping
             for index, row in filtered_df.iterrows():
-                render_enhanced_appointment_card(row, index)
+                render_appointment_card_streamlit(row, index)
     
     # Enhanced Footer
-    st.markdown("""
+    st.markdown(f"""
     <div class="dashboard-footer">
         <h3 style="margin: 0 0 1rem 0; color: #495057;">🚀 Live Appointments Dashboard</h3>
         <p style="margin: 0; color: #6c757d; font-size: 1rem;">
@@ -1244,7 +960,7 @@ def main():
             <span style="color: #6f42c1;">● Last Updated: {st.session_state.last_refresh.strftime('%H:%M:%S')}</span>
         </div>
     </div>
-    """.replace('{refresh_interval}', str(refresh_interval)), unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
