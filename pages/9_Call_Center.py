@@ -101,6 +101,9 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+@st.cache_data
+def example_cached_function(x):
+    return x * 2
 # Configuration constants
 GSHEET_URL = "https://docs.google.com/spreadsheets/d/1LFfNwb9lRQpIosSEvV3O6zIwymUIWeG9L_k7cxw1jQs/edit?gid=0"
 
