@@ -20,3 +20,5 @@ gspread_dataframe
 pytz
 yagmail 
 reportlab
+google-auth
+google-auth-oauthlib
