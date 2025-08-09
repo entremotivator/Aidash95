@@ -1459,7 +1459,7 @@ if not mobile_mode:
 # Auto-refresh functionality
 if 'auto_refresh' in locals() and auto_refresh:
     time.sleep(300)  # 5 minutes
-    st.experimental_rerun()
+    st.rerun()
 
 # Success message
 if data_loaded and len(filtered_df) > 0:
