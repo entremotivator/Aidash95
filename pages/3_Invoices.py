@@ -529,167 +529,7 @@ if st.session_state.get("global_gsheets_creds"):
         st.write(f"Showing {start_idx + 1}-{end_idx} of {total_rows} records")
         
         if view_mode == "📋 Card View":
-            # Enhanced Card View
-            st.markdown("""
-            <style>
-            .invoice-card {
-                background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-                border: 1px solid #e0e6ed;
-                border-radius: 16px;
-                padding: 1.5rem;
-                margin: 1rem 0;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-                transition: all 0.3s ease;
-                position: relative;
-                overflow: hidden;
-            }
-            .invoice-card:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            }
-            .invoice-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 4px;
-                height: 100%;
-                background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-            }
-            .invoice-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 1rem;
-                padding-bottom: 0.5rem;
-                border-bottom: 1px solid #e9ecef;
-            }
-            .customer-name {
-                font-size: 1.2rem;
-                font-weight: 600;
-                color: #2c3e50;
-                margin: 0;
-            }
-            .invoice-status {
-                padding: 0.25rem 0.75rem;
-                border-radius: 20px;
-                font-size: 0.8rem;
-                font-weight: 600;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-            .status-paid {
-                background: linear-gradient(135deg, #28a745, #20c997);
-                color: white;
-            }
-            .status-pending {
-                background: linear-gradient(135deg, #ffc107, #fd7e14);
-                color: white;
-            }
-            .status-overdue {
-                background: linear-gradient(135deg, #dc3545, #e74c3c);
-                color: white;
-            }
-            .status-draft {
-                background: linear-gradient(135deg, #6c757d, #495057);
-                color: white;
-            }
-            .invoice-details {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 1rem;
-                margin: 1rem 0;
-            }
-            .detail-item {
-                background: rgba(102, 126, 234, 0.05);
-                padding: 0.75rem;
-                border-radius: 8px;
-                border-left: 3px solid #667eea;
-            }
-            .detail-label {
-                font-size: 0.75rem;
-                color: #6c757d;
-                text-transform: uppercase;
-                font-weight: 600;
-                margin-bottom: 0.25rem;
-                letter-spacing: 0.5px;
-            }
-            .detail-value {
-                font-size: 0.95rem;
-                color: #2c3e50;
-                font-weight: 500;
-                word-break: break-all;
-            }
-            .price-highlight {
-                font-size: 1.5rem;
-                font-weight: 700;
-                color: #28a745;
-            }
-            .invoice-footer {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-top: 1.5rem;
-                padding-top: 1rem;
-                border-top: 1px solid #e9ecef;
-            }
-            .age-badge {
-                padding: 0.35rem 0.75rem;
-                border-radius: 12px;
-                font-size: 0.8rem;
-                font-weight: 600;
-            }
-            .age-current {
-                background: #d4edda;
-                color: #155724;
-            }
-            .age-warning {
-                background: #fff3cd;
-                color: #856404;
-            }
-            .age-danger {
-                background: #f8d7da;
-                color: #721c24;
-            }
-            .product-description {
-                background: rgba(108, 117, 125, 0.05);
-                padding: 0.75rem;
-                border-radius: 8px;
-                margin: 0.5rem 0;
-                font-style: italic;
-                color: #6c757d;
-                border-left: 3px solid #6c757d;
-            }
-            .action-buttons {
-                display: flex;
-                gap: 0.5rem;
-                flex-wrap: wrap;
-            }
-            .btn-action {
-                padding: 0.4rem 0.8rem;
-                border-radius: 6px;
-                font-size: 0.8rem;
-                font-weight: 500;
-                border: none;
-                cursor: pointer;
-                transition: all 0.2s ease;
-            }
-            .btn-primary {
-                background: linear-gradient(135deg, #007bff, #0056b3);
-                color: white;
-            }
-            .btn-success {
-                background: linear-gradient(135deg, #28a745, #1e7e34);
-                color: white;
-            }
-            .btn-warning {
-                background: linear-gradient(135deg, #ffc107, #e0a800);
-                color: #212529;
-            }
-            </style>
-            """, unsafe_allow_html=True)
-            
-            # Display cards in columns
+            # Clean Card View using Streamlit native components
             cols_per_row = 2
             for i in range(0, len(display_df), cols_per_row):
                 cols = st.columns(cols_per_row)
@@ -697,24 +537,22 @@ if st.session_state.get("global_gsheets_creds"):
                     if i + j < len(display_df):
                         row = display_df.iloc[i + j]
                         
-                        # Determine status styling
-                        status = str(row.get('Status', 'Unknown')).lower()
-                        status_class = f"status-{status}" if status in ['paid', 'pending', 'overdue', 'draft'] else "status-draft"
+                        # Get and clean data
+                        customer_name = str(row.get('Customer name', 'N/A'))
+                        customer_email = str(row.get('Customer email', 'N/A'))
+                        product = str(row.get('Product', 'N/A'))
+                        product_desc = str(row.get('Product Description', ''))
+                        status = str(row.get('Status', 'Unknown'))
                         
-                        # Determine age styling
+                        # Handle price
+                        price = pd.to_numeric(row.get('Price', 0), errors='coerce')
+                        if pd.isna(price):
+                            price = 0
+                        
+                        # Handle age
                         age = pd.to_numeric(row.get('Invoice Age (Days)', 0), errors='coerce')
                         if pd.isna(age):
                             age = 0
-                        
-                        if age <= 7:
-                            age_class = "age-current"
-                            age_text = "Current"
-                        elif age <= 21:
-                            age_class = "age-warning"
-                            age_text = "Follow Up"
-                        else:
-                            age_class = "age-danger"
-                            age_text = "Overdue"
                         
                         # Format date
                         date_created = row.get('Date Created', '')
@@ -723,99 +561,81 @@ if st.session_state.get("global_gsheets_creds"):
                         else:
                             formatted_date = str(date_created) if date_created else 'N/A'
                         
-                        # Clean and format data
-                        customer_name = str(row.get('Customer name', 'N/A'))
-                        customer_email = str(row.get('Customer email', 'N/A'))
-                        product = str(row.get('Product', 'N/A'))
-                        product_desc = str(row.get('Product Description', ''))
-                        price = pd.to_numeric(row.get('Price', 0), errors='coerce')
-                        if pd.isna(price):
-                            price = 0
                         invoice_link = str(row.get('Invoice Link', ''))
                         
+                        # Age category
+                        if age <= 7:
+                            age_status = "🟢 Current"
+                        elif age <= 21:
+                            age_status = "🟡 Follow Up"
+                        else:
+                            age_status = "🔴 Overdue"
+                        
+                        # Status emoji
+                        status_emoji = {
+                            'paid': '✅',
+                            'pending': '⏳',
+                            'overdue': '❌',
+                            'draft': '📝'
+                        }.get(status.lower(), '❓')
+                        
                         with col:
-                            st.markdown(f"""
-                            <div class="invoice-card">
-                                <div class="invoice-header">
-                                    <h3 class="customer-name">👤 {customer_name}</h3>
-                                    <span class="invoice-status {status_class}">{row.get('Status', 'Unknown')}</span>
-                                </div>
+                            # Create card using container
+                            with st.container():
+                                # Header with customer name and status
+                                st.markdown(f"### 👤 {customer_name}")
+                                col_status, col_price = st.columns([1, 1])
+                                with col_status:
+                                    st.markdown(f"**Status:** {status_emoji} {status}")
+                                with col_price:
+                                    st.markdown(f"**Price:** 💰 ${price:,.2f}")
                                 
-                                <div class="invoice-details">
-                                    <div class="detail-item">
-                                        <div class="detail-label">📧 Email</div>
-                                        <div class="detail-value">{customer_email}</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label">🛍️ Product</div>
-                                        <div class="detail-value">{product}</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label">💰 Price</div>
-                                        <div class="detail-value price-highlight">${price:,.2f}</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label">📅 Created</div>
-                                        <div class="detail-value">{formatted_date}</div>
-                                    </div>
-                                </div>
+                                st.markdown("---")
                                 
-                                {f'<div class="product-description">📝 {product_desc}</div>' if product_desc and product_desc != 'nan' and product_desc.strip() else ''}
+                                # Customer details
+                                st.markdown(f"**📧 Email:** {customer_email}")
+                                st.markdown(f"**🛍️ Product:** {product}")
                                 
-                                <div class="invoice-footer">
-                                    <div class="age-badge {age_class}">
-                                        ⏰ {int(age)} days • {age_text}
-                                    </div>
-                                    <div class="action-buttons">
-                                        {f'<a href="{invoice_link}" target="_blank" class="btn-action btn-primary">🔗 View</a>' if invoice_link and invoice_link != 'nan' and invoice_link.strip() else ''}
-                                        <button class="btn-action btn-success">📧 Email</button>
-                                        <button class="btn-action btn-warning">✏️ Edit</button>
-                                    </div>
-                                </div>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            
-                            # Add interactive buttons (these will be functional)
-                            button_col1, button_col2, button_col3 = st.columns(3)
-                            with button_col1:
-                                if st.button(f"📧 Email", key=f"email_{i+j}_{page}", help="Send email reminder"):
-                                    st.success(f"📬 Email sent to {customer_email}")
-                            with button_col2:
-                                if st.button(f"✏️ Edit", key=f"edit_{i+j}_{page}", help="Edit invoice"):
-                                    st.info(f"Edit mode for {customer_name}")
-                            with button_col3:
-                                if st.button(f"🗑️ Delete", key=f"delete_{i+j}_{page}", help="Delete invoice"):
-                                    st.warning(f"Delete confirmation for {customer_name}")
-                            
-                            st.markdown("---")
+                                if product_desc and product_desc.strip() and product_desc != 'nan':
+                                    with st.expander("📝 Product Description"):
+                                        st.write(product_desc)
+                                
+                                # Timeline information
+                                col_date, col_age = st.columns([1, 1])
+                                with col_date:
+                                    st.markdown(f"**📅 Created:** {formatted_date}")
+                                with col_age:
+                                    st.markdown(f"**⏰ Age:** {int(age)} days")
+                                
+                                # Age status indicator
+                                st.markdown(f"**Status:** {age_status}")
+                                
+                                # Action buttons
+                                st.markdown("**Actions:**")
+                                btn_col1, btn_col2, btn_col3, btn_col4 = st.columns(4)
+                                
+                                with btn_col1:
+                                    if st.button("📧", key=f"email_{i+j}_{page}", help="Send email"):
+                                        st.success(f"📬 Email sent to {customer_email}")
+                                
+                                with btn_col2:
+                                    if st.button("✏️", key=f"edit_{i+j}_{page}", help="Edit invoice"):
+                                        st.info(f"Edit mode for {customer_name}")
+                                
+                                with btn_col3:
+                                    if invoice_link and invoice_link.strip() and invoice_link != 'nan':
+                                        st.link_button("🔗", invoice_link, help="View invoice")
+                                    else:
+                                        st.button("🔗", key=f"nolink_{i+j}_{page}", disabled=True, help="No link available")
+                                
+                                with btn_col4:
+                                    if st.button("🗑️", key=f"delete_{i+j}_{page}", help="Delete invoice"):
+                                        st.warning(f"Delete confirmation needed for {customer_name}")
+                                
+                                st.markdown("---")
         
         else:
             # Enhanced Table View
-            st.markdown("""
-            <style>
-            .dataframe {
-                border: 1px solid #e0e6ed;
-                border-radius: 8px;
-                overflow: hidden;
-            }
-            .dataframe th {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                font-weight: 600;
-                padding: 12px;
-                text-align: left;
-            }
-            .dataframe td {
-                padding: 12px;
-                border-bottom: 1px solid #f8f9fa;
-            }
-            .dataframe tr:hover {
-                background-color: rgba(102, 126, 234, 0.05);
-            }
-            </style>
-            """, unsafe_allow_html=True)
-            
-            # Enhanced dataframe display
             display_columns = [
                 "Customer name", "Customer email", "Product", "Product Description",
                 "Price", "Status", "Date Created", "Invoice Age (Days)", "Invoice Link"
@@ -831,10 +651,23 @@ if st.session_state.get("global_gsheets_creds"):
                 formatted_df["Invoice Age (Days)"] = formatted_df["Invoice Age (Days)"].apply(lambda x: f"{int(pd.to_numeric(x, errors='coerce'))} days" if pd.notna(x) else "0 days")
             
             available_cols = [col for col in display_columns if col in formatted_df.columns]
+            
+            # Display table with enhanced features
             st.dataframe(
                 formatted_df[available_cols], 
                 use_container_width=True,
-                height=600
+                height=600,
+                column_config={
+                    "Customer name": st.column_config.TextColumn("👤 Customer", width="medium"),
+                    "Customer email": st.column_config.TextColumn("📧 Email", width="medium"),
+                    "Product": st.column_config.TextColumn("🛍️ Product", width="medium"),
+                    "Product Description": st.column_config.TextColumn("📝 Description", width="large"),
+                    "Price": st.column_config.TextColumn("💰 Price", width="small"),
+                    "Status": st.column_config.TextColumn("📊 Status", width="small"),
+                    "Date Created": st.column_config.TextColumn("📅 Date", width="medium"),
+                    "Invoice Age (Days)": st.column_config.TextColumn("⏰ Age", width="small"),
+                    "Invoice Link": st.column_config.LinkColumn("🔗 Link", width="medium")
+                }
             )
         
         # Export options
