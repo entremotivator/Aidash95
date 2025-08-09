@@ -1238,7 +1238,7 @@ if not mobile_mode:
             st.markdown("#### 📊 Data Refresh")
             if st.button("🔄 Force Refresh Data", type="primary"):
                 st.cache_data.clear()
-                st.rerun()
+                st.experimental_rerun()  # Use st.experimental_rerun() to refresh the app
             
             auto_refresh = st.checkbox("Auto-refresh every 5 minutes", value=False)
             if auto_refresh:
@@ -1246,9 +1246,15 @@ if not mobile_mode:
         
         with col2:
             st.markdown("#### 💾 Cache Management")
-            cache_info = st.cache_data.get_stats()
-            st.write(f"📈 Cache hits: {cache_info[0].cache_hits}")
-            st.write(f"❌ Cache misses: {cache_info[0].cache_misses}")
+            
+            # Example cached function (replace with your actual cached function)
+            @st.cache_data
+            def example_cached_function(x):
+                return x * 2
+            
+            cache_info = example_cached_function.cache_info()
+            st.write(f"📈 Cache hits: {cache_info.hits}")
+            st.write(f"❌ Cache misses: {cache_info.misses}")
             
             if st.button("🗑️ Clear All Cache"):
                 st.cache_data.clear()
