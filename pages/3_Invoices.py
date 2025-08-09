@@ -74,11 +74,13 @@ def load_and_process_data():
         # Convert Price to numeric, handle errors
         df["Price"] = pd.to_numeric(df["Price"], errors='coerce').fillna(0)
         
-        # Calculate invoice age
+        # Calculate invoice age - ensure numeric
         df["Invoice Age (Days)"] = (datetime.today() - df["Date Created"]).dt.days
+        df["Invoice Age (Days)"] = pd.to_numeric(df["Invoice Age (Days)"], errors='coerce').fillna(0)
         
-        # Fill NaN values
-        df = df.fillna('')
+        # Fill NaN values for string columns only
+        string_columns = df.select_dtypes(include=['object']).columns
+        df[string_columns] = df[string_columns].fillna('')
         
         return df, sheet
         
@@ -203,49 +205,187 @@ if st.session_state.get("global_gsheets_creds"):
             (filtered_df["Price"] <= price_range[1])
         ]
     
-    # Display metrics
+    # Display metrics in card-style layout
+    st.markdown("""
+    <style>
+    .metric-card {
+        background-color: #f0f2f6;
+        padding: 1rem;
+        border-radius: 10px;
+        border-left: 4px solid #1f77b4;
+        margin: 0.5rem 0;
+    }
+    .metric-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #1f77b4;
+    }
+    .metric-label {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 0.5rem;
+    }
+    .metric-delta {
+        font-size: 0.8rem;
+        color: #28a745;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Calculate metrics safely
+    total_invoices = len(filtered_df)
+    total_revenue = float(filtered_df["Price"].sum()) if not filtered_df.empty else 0.0
+    
+    # Safe calculation of average age
+    if not filtered_df.empty:
+        numeric_ages = pd.to_numeric(filtered_df["Invoice Age (Days)"], errors='coerce')
+        avg_age = numeric_ages.mean() if not numeric_ages.isna().all() else 0.0
+    else:
+        avg_age = 0.0
+    
+    unpaid_count = len(filtered_df[filtered_df["Status"] != "Paid"]) if not filtered_df.empty else 0
+    
+    # Display metrics in cards
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric("📊 Total Invoices", len(filtered_df))
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-label">📊 Total Invoices</div>
+            <div class="metric-value">{total_invoices:,}</div>
+            <div class="metric-delta">Active records</div>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col2:
-        total_revenue = filtered_df["Price"].sum()
-        st.metric("💰 Total Revenue", f"${total_revenue:,.2f}")
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-label">💰 Total Revenue</div>
+            <div class="metric-value">${total_revenue:,.2f}</div>
+            <div class="metric-delta">Filtered total</div>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col3:
-        if not filtered_df.empty and not filtered_df["Invoice Age (Days)"].isna().all():
-            avg_age = filtered_df["Invoice Age (Days)"].mean()
-            st.metric("⏰ Avg Invoice Age", f"{avg_age:.1f} days")
-        else:
-            st.metric("⏰ Avg Invoice Age", "N/A")
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-label">⏰ Avg Invoice Age</div>
+            <div class="metric-value">{avg_age:.1f}</div>
+            <div class="metric-delta">days outstanding</div>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col4:
-        unpaid_count = len(filtered_df[filtered_df["Status"] != "Paid"])
-        st.metric("❌ Unpaid Invoices", unpaid_count)
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-label">❌ Unpaid Invoices</div>
+            <div class="metric-value">{unpaid_count}</div>
+            <div class="metric-delta">need attention</div>
+        </div>
+        """, unsafe_allow_html=True)
     
-    # Invoice aging analysis
+    # Invoice aging analysis with enhanced cards
     if not filtered_df.empty:
-        overdue_30 = filtered_df[filtered_df["Invoice Age (Days)"] > 30]
-        overdue_21 = filtered_df[(filtered_df["Invoice Age (Days)"] > 21) & (filtered_df["Invoice Age (Days)"] <= 30)]
-        overdue_7 = filtered_df[(filtered_df["Invoice Age (Days)"] > 7) & (filtered_df["Invoice Age (Days)"] <= 21)]
+        # Ensure numeric calculation for aging
+        numeric_ages = pd.to_numeric(filtered_df["Invoice Age (Days)"], errors='coerce').fillna(0)
+        overdue_30 = filtered_df[numeric_ages > 30]
+        overdue_21 = filtered_df[(numeric_ages > 21) & (numeric_ages <= 30)]
+        overdue_7 = filtered_df[(numeric_ages > 7) & (numeric_ages <= 21)]
+        current_invoices = filtered_df[numeric_ages <= 7]
         
-        with st.expander("📅 Invoice Aging Analysis", expanded=False):
-            col1, col2, col3 = st.columns(3)
+        with st.expander("📅 Invoice Aging Analysis", expanded=True):
+            st.markdown("""
+            <style>
+            .aging-card {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 1.2rem;
+                border-radius: 12px;
+                color: white;
+                text-align: center;
+                margin: 0.5rem 0;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            }
+            .aging-card.danger {
+                background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            }
+            .aging-card.warning {
+                background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+            }
+            .aging-card.info {
+                background: linear-gradient(135deg, #48cae4 0%, #023e8a 100%);
+            }
+            .aging-card.success {
+                background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+            }
+            .aging-number {
+                font-size: 2.5rem;
+                font-weight: bold;
+                margin: 0;
+            }
+            .aging-label {
+                font-size: 0.9rem;
+                opacity: 0.9;
+                margin-top: 0.5rem;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
             with col1:
-                st.error(f"🚨 Over 30 days: {len(overdue_30)}")
+                st.markdown(f"""
+                <div class="aging-card danger">
+                    <div class="aging-number">{len(overdue_30)}</div>
+                    <div class="aging-label">🚨 Over 30 days</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
             with col2:
-                st.warning(f"⚠️ 21–30 days: {len(overdue_21)}")
+                st.markdown(f"""
+                <div class="aging-card warning">
+                    <div class="aging-number">{len(overdue_21)}</div>
+                    <div class="aging-label">⚠️ 21–30 days</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
             with col3:
-                st.info(f"ℹ️ 7–21 days: {len(overdue_7)}")
+                st.markdown(f"""
+                <div class="aging-card info">
+                    <div class="aging-number">{len(overdue_7)}</div>
+                    <div class="aging-label">ℹ️ 7–21 days</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col4:
+                st.markdown(f"""
+                <div class="aging-card success">
+                    <div class="aging-number">{len(current_invoices)}</div>
+                    <div class="aging-label">✅ Current (≤7 days)</div>
+                </div>
+                """, unsafe_allow_html=True)
     
-    # Charts
+    # Charts with enhanced styling
     if not filtered_df.empty and not filtered_df["Date Created"].isna().all():
-        st.subheader("📈 Analytics")
+        st.markdown("---")
+        st.subheader("📈 Analytics Dashboard")
+        
+        # Add some spacing and styling
+        st.markdown("""
+        <style>
+        .chart-container {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 1rem 0;
+        }
+        </style>
+        """, unsafe_allow_html=True)
         
         col1, col2 = st.columns(2)
         
         with col1:
+            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
             # Monthly sales chart
             monthly_data = filtered_df.copy()
             monthly_data["Month"] = monthly_data["Date Created"].dt.to_period("M").astype(str)
@@ -258,11 +398,19 @@ if st.session_state.get("global_gsheets_creds"):
                     y="Price", 
                     title="💰 Revenue by Month",
                     color="Price",
-                    color_continuous_scale="Blues"
+                    color_continuous_scale="Blues",
+                    template="plotly_white"
+                )
+                fig1.update_layout(
+                    title_font_size=16,
+                    showlegend=False,
+                    margin=dict(t=50, l=50, r=50, b=50)
                 )
                 st.plotly_chart(fig1, use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
         
         with col2:
+            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
             # Status distribution
             status_counts = filtered_df["Status"].value_counts().reset_index()
             status_counts.columns = ["Status", "Count"]
@@ -272,9 +420,73 @@ if st.session_state.get("global_gsheets_creds"):
                     status_counts, 
                     values="Count", 
                     names="Status", 
-                    title="📊 Invoice Status Distribution"
+                    title="📊 Invoice Status Distribution",
+                    color_discrete_sequence=px.colors.qualitative.Set3,
+                    template="plotly_white"
                 )
+                fig2.update_layout(
+                    title_font_size=16,
+                    margin=dict(t=50, l=50, r=50, b=50)
+                )
+                fig2.update_traces(textposition='inside', textinfo='percent+label')
                 st.plotly_chart(fig2, use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Additional analytics row
+        col3, col4 = st.columns(2)
+        
+        with col3:
+            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+            # Product distribution
+            product_revenue = filtered_df.groupby("Product")["Price"].sum().reset_index()
+            if not product_revenue.empty:
+                fig3 = px.horizontal_bar(
+                    product_revenue.head(10), 
+                    x="Price", 
+                    y="Product", 
+                    title="🛍️ Top Products by Revenue",
+                    color="Price",
+                    color_continuous_scale="Greens",
+                    template="plotly_white"
+                )
+                fig3.update_layout(
+                    title_font_size=16,
+                    showlegend=False,
+                    margin=dict(t=50, l=50, r=50, b=50)
+                )
+                st.plotly_chart(fig3, use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+        
+        with col4:
+            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+            # Invoice age distribution
+            if not filtered_df.empty:
+                age_bins = pd.cut(
+                    pd.to_numeric(filtered_df["Invoice Age (Days)"], errors='coerce').fillna(0),
+                    bins=[-1, 7, 21, 30, 60, float('inf')],
+                    labels=['0-7 days', '8-21 days', '22-30 days', '31-60 days', '60+ days']
+                )
+                age_dist = age_bins.value_counts().reset_index()
+                age_dist.columns = ["Age Range", "Count"]
+                
+                if not age_dist.empty:
+                    fig4 = px.bar(
+                        age_dist,
+                        x="Age Range",
+                        y="Count",
+                        title="⏰ Invoice Age Distribution",
+                        color="Count",
+                        color_continuous_scale="Reds",
+                        template="plotly_white"
+                    )
+                    fig4.update_layout(
+                        title_font_size=16,
+                        showlegend=False,
+                        margin=dict(t=50, l=50, r=50, b=50),
+                        xaxis_tickangle=-45
+                    )
+                    st.plotly_chart(fig4, use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
     
     # Data table
     st.subheader("📄 Invoice Data")
