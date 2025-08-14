@@ -5,16 +5,35 @@ import json
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
+from oauth2client.service_account import ServiceAccountCredentials  # For compatibility if needed
+import plotly.express as px
+from io import BytesIO
+import base64
 
 # ------------------------------------------------------------------------------------
-# Page configuration (this is an EXTRA PAGE, not the main login page)
+# Page configuration
 # ------------------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Content Management Dashboard",
+    page_title="📊 Content Management Dashboard",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# ------------------------------------------------------------------------------------
+# Authentication Status (from your Invoice CRM format)
+# ------------------------------------------------------------------------------------
+st.sidebar.title("🔐 Authentication Status")
+
+if not st.session_state.get("global_gsheets_creds"):
+    st.sidebar.error("❌ No global credentials found")
+    st.sidebar.info("Please upload service account JSON in the main sidebar")
+    st.error("🔑 Google Sheets credentials not found. Please upload your service account JSON in the sidebar.")
+    st.stop()
+else:
+    st.sidebar.success("✅ Using global credentials")
+    client_email = st.session_state.global_gsheets_creds.get('client_email', 'Unknown')
+    st.sidebar.info(f"📧 {client_email[:30]}...")
 
 # ------------------------------------------------------------------------------------
 # Constants / Config
@@ -86,12 +105,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------------
-# Session initialization (shared across pages)
+# Session initialization
 # ------------------------------------------------------------------------------------
 if 'content_data' not in st.session_state:
     st.session_state.content_data = {}
 if 'service_account_config' not in st.session_state:
-    # Optional: support secrets as a fallback if set
     if "google_service_account" in st.secrets:
         st.session_state.service_account_config = json.loads(st.secrets["google_service_account"])
     else:
@@ -105,67 +123,29 @@ if 'last_updated' not in st.session_state:
 # Helpers
 # ------------------------------------------------------------------------------------
 def load_sample_data():
-    """Initial sample structure for first run."""
     return {
-        "🪡 Threads by Instagram": [
-            "Example Instagram Thread 1",
-            "Example Instagram Thread 2"
-        ],
-        "🧵 Tweet thread": [
-            "Example Tweet Thread 1",
-            "Example Tweet Thread 2"
-        ],
-        "👩‍💻 LinkedIn post": [
-            "Example LinkedIn Post 1",
-            "Example LinkedIn Post 2"
-        ],
-        "🎬 Reel script": [
-            "Example Reel Script 1",
-            "Example Reel Script 2"
-        ],
-        "🎞️ Clipfinder: Quotes, Hooks, & Timestamps": [
-            "Example Clipfinder Content 1",
-            "Example Clipfinder Content 2"
-        ],
-        "❇️ Key topics and bullets": [
-            "Example Key Topics 1",
-            "Example Key Topics 2"
-        ],
-        "❓ Questions": [
-            "Example Question 1",
-            "Example Question 2"
-        ],
-        "intro": [
-            "Example Introduction 1",
-            "Example Introduction 2"
-        ],
-        "FB Post": [
-            "Example Facebook Post 1",
-            "Example Facebook Post 2"
-        ],
-        "💬 Keywords": [
-            "Keyword1, Keyword2",
-            "Keyword3, Keyword4"
-        ],
-        "🔖 Titles": [
-            "Title Example 1",
-            "Title Example 2"
-        ]
+        "🪡 Threads by Instagram": ["Example Instagram Thread 1", "Example Instagram Thread 2"],
+        "🧵 Tweet thread": ["Example Tweet Thread 1", "Example Tweet Thread 2"],
+        "👩‍💻 LinkedIn post": ["Example LinkedIn Post 1", "Example LinkedIn Post 2"],
+        "🎬 Reel script": ["Example Reel Script 1", "Example Reel Script 2"],
+        "🎞️ Clipfinder: Quotes, Hooks, & Timestamps": ["Example Clipfinder Content 1", "Example Clipfinder Content 2"],
+        "❇️ Key topics and bullets": ["Example Key Topics 1", "Example Key Topics 2"],
+        "❓ Questions": ["Example Question 1", "Example Question 2"],
+        "intro": ["Example Introduction 1", "Example Introduction 2"],
+        "FB Post": ["Example Facebook Post 1", "Example Facebook Post 2"],
+        "💬 Keywords": ["Keyword1, Keyword2", "Keyword3, Keyword4"],
+        "🔖 Titles": ["Title Example 1", "Title Example 2"]
     }
 
 def connect_to_sheets():
-    """Connect to Google Sheets using service account already set at login."""
     try:
         cfg = st.session_state.service_account_config
         if not cfg:
             return False, "No service account available. Please authenticate on the Login page."
         credentials = Credentials.from_service_account_info(cfg, scopes=SCOPES)
         client = gspread.authorize(credentials)
-
-        # Extract sheet ID from URL
         sheet_id = SHEETS_URL.split('/d/')[1].split('/')[0]
         sheet = client.open_by_key(sheet_id)
-
         st.session_state.sheets_client = client
         st.session_state.sheet = sheet
         st.session_state.sheets_connected = True
@@ -175,16 +155,13 @@ def connect_to_sheets():
         return False, f"Connection failed: {str(e)}"
 
 def refresh_from_sheets():
-    """Refresh data from Google Sheets."""
     try:
         if not st.session_state.sheets_connected:
             return False, "Not connected to sheets"
         worksheet = st.session_state.sheet.sheet1
         data = worksheet.get_all_records()
-
         if data:
             new_data = {}
-            # Convert rows->columns into the expected dict-of-lists format
             columns = data[0].keys()
             for column in columns:
                 new_data[column] = [row[column] for row in data if row.get(column)]
@@ -196,7 +173,6 @@ def refresh_from_sheets():
         return False, f"Refresh failed: {str(e)}"
 
 def export_to_json():
-    """Export current data to JSON."""
     json_data = {
         "data": st.session_state.content_data,
         "exported_at": st.session_state.last_updated.isoformat(),
@@ -205,13 +181,11 @@ def export_to_json():
     return json.dumps(json_data, indent=2)
 
 # ------------------------------------------------------------------------------------
-# Auth gate: this page depends on login page having set credentials
+# Auth check (extra layer)
 # ------------------------------------------------------------------------------------
 if not st.session_state.service_account_config:
     st.error("🔒 This page requires Google Service Account credentials from the Login page.")
     st.info("Go back to your Login/Authentication page to sign in. After login, return here.")
-    # If your app uses st.page_link to your login page, uncomment and edit:
-    # st.page_link("Home.py", label="⬅️ Go to Login", icon=":material/login:")
     st.stop()
 
 # ------------------------------------------------------------------------------------
@@ -231,28 +205,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------------
-# Sidebar (no uploader here; creds come from login/secrets)
+# Sidebar controls
 # ------------------------------------------------------------------------------------
 with st.sidebar:
     st.header("🔧 Dashboard Control")
-    st.subheader("🔐 Authentication")
-    cred_ok = isinstance(st.session_state.service_account_config, dict) and \
-              st.session_state.service_account_config.get("type") == "service_account"
-
-    if cred_ok:
-        proj = st.session_state.service_account_config.get("project_id", "unknown-project")
-        st.markdown(
-            f'<div class="success-message">✅ Authenticated via Login<br>Project: {proj}</div>',
-            unsafe_allow_html=True
-        )
-    else:
-        st.markdown(
-            '<div class="error-message">❌ Credentials missing or invalid. Please re-authenticate on the Login page.</div>',
-            unsafe_allow_html=True
-        )
-
-    st.divider()
-
     st.subheader("📡 Google Sheets")
     if st.button("🔗 Connect to Sheets", use_container_width=True):
         success, message = connect_to_sheets()
@@ -270,7 +226,6 @@ with st.sidebar:
         else:
             st.error(message)
 
-    # Export Data
     json_export = export_to_json()
     st.download_button(
         label="💾 Export Data",
@@ -282,7 +237,6 @@ with st.sidebar:
 
     st.divider()
 
-    # Stats
     st.subheader("📈 Statistics")
     total_entries = sum(len(items) for items in st.session_state.content_data.values())
     st.markdown(f"""
@@ -300,17 +254,14 @@ with st.sidebar:
 if st.session_state.content_data:
     tab_names = list(st.session_state.content_data.keys())
     tabs = st.tabs(tab_names)
-
     for tab, column_name in zip(tabs, tab_names):
         with tab:
             col1, col2 = st.columns([3, 1])
-
             with col1:
                 st.subheader(f"📝 {column_name}")
             with col2:
                 st.metric("Items", len(st.session_state.content_data[column_name]))
 
-            # Add new content form
             with st.expander("➕ Add New Content", expanded=False):
                 new_content = st.text_area(
                     f"Enter new content for {column_name}:",
@@ -330,8 +281,6 @@ if st.session_state.content_data:
                             st.error("Please enter some content")
 
             st.divider()
-
-            # Display existing content
             items = st.session_state.content_data.get(column_name, [])
             if items:
                 for idx, content in enumerate(items):
