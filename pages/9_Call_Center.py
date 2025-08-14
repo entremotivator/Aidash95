@@ -78,7 +78,7 @@ st.markdown("""
         border-radius: 8px;
         padding: 1rem;
         margin: 1rem 0;
-        background: #fff9c4;
+        background: #000000;
     }
     
     .call-summary {
