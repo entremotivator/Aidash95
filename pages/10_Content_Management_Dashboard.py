@@ -491,7 +491,16 @@ if st.session_state.content_data:
             # Content distribution pie chart
             categories = list(st.session_state.content_data.keys())
             values = [len(st.session_state.content_data[cat]) for cat in categories]
-            colors = [CONTENT_CATEGORIES[cat]["color"] for cat in categories]
+            
+            # Default color palette for categories not in CONTENT_CATEGORIES
+            default_colors = ["#667eea", "#764ba2", "#f093fb", "#f5576c", "#4facfe", "#00f2fe", "#43e97b", "#38f9d7"]
+            colors = []
+            for i, cat in enumerate(categories):
+                if cat in CONTENT_CATEGORIES:
+                    colors.append(CONTENT_CATEGORIES[cat]["color"])
+                else:
+                    # Use default colors cycling through the palette
+                    colors.append(default_colors[i % len(default_colors)])
             
             fig_pie = px.pie(
                 values=values, 
