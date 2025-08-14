@@ -51,7 +51,7 @@ st.markdown("""
         }
     }
     
-    /* Custom styling */
+    /* Custom styling for cards */
     .metric-card {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         padding: 1rem;
@@ -78,26 +78,46 @@ st.markdown("""
         border-radius: 8px;
         padding: 1rem;
         margin: 1rem 0;
-        background: #f9f9f9;
+        background: #f3f3f3;
     }
     
     .call-summary {
-        background: #ffffff;
+        background: #f3f3f3; /* changed from white */
         border-left: 4px solid #2196F3;
         padding: 1rem;
         margin: 1rem 0;
         border-radius: 0 8px 8px 0;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-</style>
-""", unsafe_allow_html=True)
 
-# Header with enhanced branding
-st.markdown("""
-<div style="text-align: center; padding: 2rem 0;">
+    /* Header branding colors */
+    .header-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem 0;
+        border-radius: 10px;
+        color: white;
+    }
+
+    .header-container h1 {
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+    }
+
+    .header-container h3 {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .header-container p {
+        font-size: 1.1em;
+        margin-top: 0.5rem;
+    }
+</style>
+
+<div class="header-container" style="text-align: center;">
     <h1>📞 Advanced Call CRM Dashboard</h1>
     <h3>🚀 Live Analytics | 🎯 Smart Filtering | 🔊 Universal Audio Player</h3>
-    <p style="color: #666; font-size: 1.1em;">Real-time insights from Google Sheets with advanced mobile support</p>
+    <p>Real-time insights from Google Sheets with advanced mobile support</p>
 </div>
 """, unsafe_allow_html=True)
 
