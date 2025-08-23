@@ -1147,12 +1147,16 @@ if not mobile_mode:
                 
                 # Prepare time-based data
                 time_df = filtered_df.copy()
-                time_df['call_date'] = pd.to_datetime(time_df['call_date'])
-                time_df['hour'] = time_df['call_start_time'].apply(
-                    lambda x: int(str(x).split(':')[0]) if ':' in str(x) else 0
-                )
+                
+                # Convert safely
+                time_df['call_date'] = pd.to_datetime(time_df['call_date'], errors='coerce')
+                time_df['call_start_time'] = pd.to_datetime(time_df['call_start_time'], errors='coerce')
+                
+                # Extract hour + day of week
+                time_df['hour'] = time_df['call_start_time'].dt.hour.fillna(0).astype(int)
                 time_df['day_of_week'] = time_df['call_date'].dt.day_name()
                 
+                # Streamlit layout
                 col1, col2 = st.columns(2)
                 
                 with col1:
