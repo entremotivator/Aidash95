@@ -1261,7 +1261,7 @@ if not mobile_mode:
             st.markdown("#### 📊 Data Refresh")
             if st.button("🔄 Force Refresh Data", type="primary"):
                 st.cache_data.clear()
-                st.experimental_rerun()  # Use st.experimental_rerun() to refresh the app
+                st.rerun()  # Use st.experimental_rerun() to refresh the app
             
             auto_refresh = st.checkbox("Auto-refresh every 5 minutes", value=False)
             if auto_refresh:
