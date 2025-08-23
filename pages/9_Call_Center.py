@@ -1273,11 +1273,7 @@ if not mobile_mode:
         
         with col2:
             st.markdown("#### 💾 Cache Management")
-            
-            # Example cached function (replace with your actual cached function)
-            @st.cache_data
-            def example_cached_function(x):
-                return x * 2
+        
             
             cache_info = example_cached_function.cache_info()
             st.write(f"📈 Cache hits: {cache_info.hits}")
